@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeQuestIdle</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+:root{
+  --bg-deep:#160c22;
+  --bg-panel:#241533;
+  --bg-panel-2:#2d1c40;
+  --border:#4a2f6b;
+  --border-lit:#7c4fb8;
+  --gold:#e8b64a;
+  --gold-dim:#a17e33;
+  --parchment:#efe3c8;
+  --muted:#a394bd;
+  --hp:#e0524a;
+  --mp:#4aa8e8;
+  --stam:#57c97b;
+  --thirst:#4ac9e0;
+  --hunger:#d98f3f;
+  --mood:#e07ad6;
+  --c-common:#b9b3c4;
+  --c-uncommon:#5fd06a;
+  --c-rare:#4aa8e8;
+  --c-epic:#b355e8;
+  --c-legendary:#e8a83c;
+  --c-mythic:#e85a5a;
+  --font-head:'Press Start 2P', monospace;
+  --font-body:'VT323', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 15% 10%, #2b1a42 0%, transparent 45%),
+    radial-gradient(circle at 85% 90%, #1e2a42 0%, transparent 40%),
+    var(--bg-deep);
+  color:var(--parchment);
+  font-family:var(--font-body);
+  font-size:19px;
+  min-height:100vh;
+  image-rendering:pixelated;
+}
+::selection{background:var(--gold);color:#241533;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--bg-panel);}
+::-webkit-scrollbar-thumb{background:var(--border-lit);border:2px solid var(--bg-panel);}
+
+.pixel-border{border:3px solid var(--border);box-shadow: inset 0 0 0 2px #0000004d, 0 3px 0 #00000055;border-radius:2px;}
+
+button{
+  font-family:var(--font-body);font-size:18px;cursor:pointer;
+  background:var(--bg-panel-2);color:var(--parchment);border:2px solid var(--border-lit);
+  padding:8px 14px;border-radius:2px;box-shadow: 0 2px 0 #00000066;
+  transition:transform .06s ease, background .15s ease;
+}
+button:hover:not(:disabled){background:#3a2452;}
+button:active:not(:disabled){transform:translateY(2px);box-shadow:none;}
+button:disabled{opacity:.4;cursor:not-allowed;}
+button.primary{background:var(--gold);color:#2a1a10;border-color:var(--gold-dim);font-weight:bold;}
+button.primary:hover:not(:disabled){background:#f5c765;}
+button.danger{border-color:var(--hp);}
+button.small{padding:4px 9px;font-size:13px;}
+
+h1,h2,h3,.pixel-title{font-family:var(--font-head);}
+
+#app{display:none;min-height:100vh;flex-direction:column;}
+#app.ready{display:flex;}
+
+#hud{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 16px;
+  background:linear-gradient(180deg,#2d1c40,#20132e);border-bottom:3px solid var(--border-lit);
+  position:sticky;top:0;z-index:50;
+}
+#hud .brand{font-family:var(--font-head);font-size:15px;color:var(--gold);letter-spacing:1px;margin-right:8px;white-space:nowrap;}
+#hud .hud-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.bar-wrap{display:flex;flex-direction:column;gap:2px;min-width:100px;}
+.bar-label{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:6px;}
+.bar-track{width:100%;height:11px;background:#140b1e;border:2px solid #000;border-radius:2px;overflow:hidden;}
+.bar-fill{height:100%;transition:width .3s ease;}
+.fill-hp{background:linear-gradient(90deg,#a83c34,var(--hp));}
+.fill-mp{background:linear-gradient(90deg,#2f6fa8,var(--mp));}
+.fill-xp{background:linear-gradient(90deg,#a1802f,var(--gold));}
+.fill-stam{background:linear-gradient(90deg,#2f8a53,var(--stam));}
+.fill-thirst{background:linear-gradient(90deg,#2f8fa0,var(--thirst));}
+.fill-hunger{background:linear-gradient(90deg,#a06426,var(--hunger));}
+.fill-mood{background:linear-gradient(90deg,#a04d94,var(--mood));}
+.fill-fatigue{background:linear-gradient(90deg,#8a3c3c,#e08a4a);}
+
+.hud-chip{font-size:14px;background:#1a1026;border:1px solid var(--border);padding:4px 8px;border-radius:2px;color:var(--muted);white-space:nowrap;}
+.hud-chip b{color:var(--parchment);}
+#goldChip{color:var(--gold);border-color:var(--gold-dim);}
+#goldChip b{color:var(--gold);}
+
+#main{display:flex;flex:1;min-height:0;}
+#tabrail{width:168px;flex-shrink:0;background:#1c1128;border-right:3px solid var(--border-lit);display:flex;flex-direction:column;padding:10px 0;overflow-y:auto;}
+.tab-btn{background:none;border:none;box-shadow:none;display:flex;align-items:center;gap:10px;padding:10px 14px;text-align:left;color:var(--muted);font-size:15px;border-left:4px solid transparent;border-radius:0;width:100%;}
+.tab-btn:hover{background:#2a1a3d;color:var(--parchment);}
+.tab-btn.active{background:#33204a;color:var(--gold);border-left-color:var(--gold);}
+.tab-icon{font-size:17px;width:20px;text-align:center;}
+
+#content{flex:1;overflow-y:auto;padding:20px 22px 60px;min-width:0;}
+.panel{display:none;}
+.panel.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.section-title{font-family:var(--font-head);font-size:16px;color:var(--gold);margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.sub-title{font-family:var(--font-head);font-size:12px;color:var(--parchment);margin:18px 0 10px;}
+
+.card{background:var(--bg-panel);border:2px solid var(--border);border-radius:3px;padding:14px;margin-bottom:12px;}
+.grid{display:grid;gap:12px;}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+
+.tag{display:inline-block;font-size:13px;padding:2px 7px;border-radius:2px;border:1px solid;margin-right:4px;}
+.stat-row{display:flex;justify-content:space-between;font-size:16px;padding:3px 0;color:var(--muted);border-bottom:1px dotted #2a1c3d;cursor:default;}
+.stat-row:last-child{border-bottom:none;}
+.stat-row b{color:var(--parchment);}
+.stat-row[title]{position:relative;}
+
+.r-common{color:var(--c-common);border-color:var(--c-common);}
+.r-uncommon{color:var(--c-uncommon);border-color:var(--c-uncommon);}
+.r-rare{color:var(--c-rare);border-color:var(--c-rare);}
+.r-epic{color:var(--c-epic);border-color:var(--c-epic);}
+.r-legendary{color:var(--c-legendary);border-color:var(--c-legendary);}
+.r-mythic{color:var(--c-mythic);border-color:var(--c-mythic);}
+
+.choice-card{background:var(--bg-panel);border:2px solid var(--border);border-radius:3px;padding:12px;cursor:pointer;transition:border-color .15s, transform .1s;}
+.choice-card:hover{border-color:var(--border-lit);transform:translateY(-2px);}
+.choice-card.selected{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset;}
+.choice-icon{font-size:28px;}
+.choice-name{font-family:var(--font-head);font-size:13px;color:var(--gold);margin:8px 0 4px;}
+.choice-desc{font-size:15px;color:var(--muted);line-height:1.35;}
+
+#paperdoll{display:grid;grid-template-columns:repeat(3,84px);gap:8px;justify-content:center;}
+.doll-slot{width:84px;height:84px;background:#160c22;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;text-align:center;color:var(--muted);border-radius:3px;cursor:pointer;padding:4px;}
+.doll-slot.filled{border-style:solid;}
+.doll-slot .slot-icon{font-size:22px;}
+
+.item-row{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:3px;margin-bottom:6px;background:#1c1128;}
+.item-row .slot-icon{font-size:20px;width:26px;text-align:center;}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:16px;}
+.item-sub{font-size:13px;color:var(--muted);}
+.item-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.item-actions button{padding:4px 8px;font-size:13px;}
+
+.skill-card{background:#1c1128;border:1px solid var(--border);border-radius:3px;padding:10px;}
+.skill-head{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.skill-name{font-size:16px;color:var(--parchment);}
+.skill-lvl{font-size:13px;color:var(--gold);}
+.skill-desc{font-size:14px;color:var(--muted);margin:4px 0 8px;}
+.skill-dots{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap;}
+.dot{width:10px;height:10px;border-radius:50%;background:#3a2452;border:1px solid var(--border);}
+.dot.lit{background:var(--gold);}
+
+.progress-outer{width:100%;height:14px;background:#140b1e;border:2px solid #000;border-radius:2px;overflow:hidden;}
+.progress-inner{height:100%;background:linear-gradient(90deg,#a1802f,var(--gold));transition:width .2s;}
+
+#battleLog{height:170px;overflow-y:auto;background:#0f0917;border:2px solid var(--border);border-radius:3px;padding:8px 10px;font-size:15px;display:flex;flex-direction:column-reverse;}
+#battleLog div{padding:2px 0;border-bottom:1px dotted #2a1c3d;}
+.log-dmg{color:#ff9d8a;}
+.log-crit{color:var(--c-legendary);}
+.log-loot{color:var(--c-uncommon);}
+.log-lvl{color:var(--gold);}
+.log-info{color:var(--muted);}
+.log-quip{color:#8fe0d8;font-style:italic;}
+.log-boss{color:var(--c-mythic);}
+
+.monster-badge{display:flex;align-items:center;gap:14px;background:var(--bg-panel);border:2px solid var(--border);padding:12px;border-radius:3px;}
+.monster-icon{font-size:38px;}
+
+#modalOverlay{position:fixed;inset:0;background:#0a0612e6;display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+#modalOverlay.show{display:flex;}
+#modalBox{background:var(--bg-panel);border:3px solid var(--gold);border-radius:4px;max-width:640px;width:100%;max-height:86vh;overflow-y:auto;padding:22px;}
+
+.banner{padding:10px 14px;border-radius:3px;margin-bottom:14px;font-size:15px;}
+.banner.warn{background:#3d1f1f;border:2px solid var(--hp);color:#ffc7c0;}
+.banner.info{background:#1f2e3d;border:2px solid var(--mp);color:#c7e3ff;}
+.banner.gold{background:#3d331f;border:2px solid var(--gold);color:#ffe7b0;}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+select{font-family:var(--font-body);font-size:16px;background:#1a1026;color:var(--parchment);border:2px solid var(--border);padding:6px 8px;border-radius:2px;}
+label.chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);}
+
+.playing-card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:56px;height:78px;background:#f0e6d2;color:#241533;border-radius:4px;border:2px solid #000;font-family:var(--font-head);font-size:12px;margin:3px;}
+.playing-card.red{color:#b0332c;}
+.card-back{background:repeating-linear-gradient(45deg,#4a2f6b,#4a2f6b 5px,#7c4fb8 5px,#7c4fb8 10px);}
+
+.moo-track{width:100%;height:28px;background:#140b1e;border:2px solid #000;border-radius:3px;position:relative;overflow:hidden;margin:10px 0;}
+.moo-zone{position:absolute;top:0;bottom:0;background:#57c97b66;border-left:2px dashed var(--stam);border-right:2px dashed var(--stam);}
+.moo-cursor{position:absolute;top:0;bottom:0;width:4px;background:var(--gold);}
+
+@media (max-width:820px){
+  #tabrail{width:56px;}
+  .tab-btn span.label{display:none;}
+  #paperdoll{grid-template-columns:repeat(3,70px);}
+  .doll-slot{width:70px;height:70px;}
+}
+</style>
+</head>
+<body>
+
+<div id="charCreate" class="pixel-border" style="max-width:920px;margin:26px auto;padding:26px;background:var(--bg-panel);">
+  <div style="text-align:center;margin-bottom:6px;">
+    <div style="font-family:var(--font-head);font-size:26px;color:var(--gold);text-shadow:3px 3px 0 #000;">VibeQuestIdle</div>
+    <div style="color:var(--muted);margin-top:6px;font-size:17px;" id="ccTagline">a high fantasy pixel idle rpg</div>
+  </div>
+  <div id="reincarnateBanner" class="banner gold" style="display:none;"></div>
+  <div id="ccStep1">
+    <h3 class="sub-title">Choose your race</h3>
+    <div id="raceChoices" class="grid grid-4"></div>
+  </div>
+  <div id="ccStep2" style="margin-top:8px;">
+    <h3 class="sub-title">Choose your class</h3>
+    <div id="classChoices" class="grid grid-4"></div>
+  </div>
+  <div style="margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <input id="heroName" placeholder="Name your hero" maxlength="18" style="font-family:var(--font-body);font-size:17px;background:#1a1026;color:var(--parchment);border:2px solid var(--border);padding:8px 10px;border-radius:2px;flex:1;min-width:180px;">
+    <button class="primary" id="beginBtn" disabled>Begin adventure</button>
+  </div>
+  <div id="ccSummary" style="margin-top:12px;font-size:15px;color:var(--muted);"></div>
+</div>
+
+<div id="app">
+  <div id="hud"></div>
+  <div id="main">
+    <div id="tabrail"></div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div id="modalOverlay"><div id="modalBox"></div></div>
+
+<script>
+/* =========================================================
+   VibeQuestIdle v2 - core data & engine
+   ========================================================= */
+(function(){
+"use strict";
+
+/* ---------------- STATS ---------------- */
+const STAT_KEYS = ['str','agi','int','vit','wis','faith','luck']; // 7 core, point-buy stats
+const SECONDARY_KEYS = ['evasion','attackBonus','magicBonus','damageBonus','armorRating','armorBonus','criticalRating','lifeSteal','blockRating','experienceBonus']; // 10 rating stats
+const ALL_STAT_KEYS = STAT_KEYS.concat(SECONDARY_KEYS); // 17 total
+const SECONDARY_BASE = {evasion:1,attackBonus:0,magicBonus:0,damageBonus:0,armorRating:1,armorBonus:1,criticalRating:1,lifeSteal:1,blockRating:1,experienceBonus:1};
+
+const STAT_LABEL = {
+  str:'Strength',agi:'Agility',int:'Intellect',vit:'Vitality',wis:'Wisdom',faith:'Faith',luck:'Luck',
+  evasion:'Evasion',attackBonus:'Attack Bonus',magicBonus:'Magic Bonus',damageBonus:'Damage Bonus',
+  armorRating:'Armor Rating',armorBonus:'Armor Bonus',criticalRating:'Critical Rating',lifeSteal:'Life Steal',
+  blockRating:'Block Rating',experienceBonus:'Experience Bonus'
+};
+const STAT_TOOLTIP = {
+  str:'Increases the damage you deal with melee weapons.',
+  agi:'Increases your chance to dodge incoming attacks.',
+  int:'Increases the damage of your spells and expands your mana pool.',
+  vit:'Expands your maximum health.',
+  wis:'Increases the experience you earn from battle.',
+  faith:'Quietly strengthens every one of your other stats.',
+  luck:'Improves your chances of finding rare treasure, and quietly strengthens every other stat.',
+  evasion:'Your chance to avoid an incoming attack entirely.',
+  attackBonus:'Increases the damage of your automatic weapon attacks.',
+  magicBonus:'Increases the damage of your class skills and racial powers.',
+  damageBonus:'Increases all damage you deal, regardless of the source.',
+  armorRating:'Your chance to reduce the damage of an incoming attack.',
+  armorBonus:'How much damage is reduced when your armor triggers.',
+  criticalRating:'Your chance to strike a devastating, double-damage blow.',
+  lifeSteal:'Converts a portion of the damage you deal into healing. An exceptionally rare stat to find.',
+  blockRating:'Your chance to block an attack outright with a shield.',
+  experienceBonus:'Increases the experience you gain from every kill.'
+};
+function isPercentStat(k){ return SECONDARY_KEYS.includes(k); }
+function isCoreStat(k){ return STAT_KEYS.includes(k); }
+function emptyStatObj(){ const o={}; ALL_STAT_KEYS.forEach(k=>o[k]=0); return o; }
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; } // round to the nearest hundredth
+
+const ELEMENTS = [
+  {key:'fire',name:'Fire',icon:'🔥',color:'#ff5a3c'},
+  {key:'water',name:'Water',icon:'🌊',color:'#3ca6ff'},
+  {key:'earth',name:'Earth',icon:'⛰️',color:'#a9793f'},
+  {key:'air',name:'Air',icon:'🌪️',color:'#bfe8ff'},
+  {key:'ice',name:'Ice',icon:'❄️',color:'#8fdcff'},
+  {key:'lightning',name:'Lightning',icon:'⚡',color:'#ffe94a'},
+  {key:'nature',name:'Nature',icon:'🌿',color:'#5ad66a'},
+  {key:'shadow',name:'Shadow',icon:'🌑',color:'#9a6ae8'},
+  {key:'light',name:'Light',icon:'✨',color:'#fff2b0'},
+  {key:'arcane',name:'Arcane',icon:'🔮',color:'#c15aff'},
+  {key:'metal',name:'Metal',icon:'⚙️',color:'#c9c9d6'},
+  {key:'void',name:'Void',icon:'🕳️',color:'#8a6ae8'},
+];
+const EL = {}; ELEMENTS.forEach(e=>EL[e.key]=e);
+
+/* Rank titles now run to 20 for factions/deities/cultures */
+const RANK_TITLES_20 = ['Initiate','Associate','Recognized','Trusted','Valued','Veteran','Seasoned','Elite','Distinguished',
+  'Champion','Renowned','Hero','Exalted','Legend','Mythic','Icon','Paragon','Eternal','Grandmaster','Ascendant'];
+
+const RARITY = [
+  {key:'common',name:'Common',weight:50,mult:1,color:'var(--c-common)'},
+  {key:'uncommon',name:'Uncommon',weight:26,mult:1.6,color:'var(--c-uncommon)'},
+  {key:'rare',name:'Rare',weight:13,mult:2.4,color:'var(--c-rare)'},
+  {key:'epic',name:'Epic',weight:7,mult:3.6,color:'var(--c-epic)'},
+  {key:'legendary',name:'Legendary',weight:3,mult:5.5,color:'var(--c-legendary)'},
+  {key:'mythic',name:'Mythic',weight:1,mult:8.5,color:'var(--c-mythic)'},
+];
+const RARITY_TOTAL = RARITY.reduce((s,r)=>s+r.weight,0);
+
+const EQUIP_SLOTS = [
+  {key:'head',name:'Head',icon:'🪖'},{key:'neck',name:'Neck',icon:'📿'},{key:'shoulders',name:'Shoulders',icon:'🎽'},
+  {key:'chest',name:'Chest',icon:'👕'},{key:'back',name:'Back',icon:'🧣'},{key:'hands',name:'Hands',icon:'🧤'},
+  {key:'waist',name:'Waist',icon:'🎗️'},{key:'legs',name:'Legs',icon:'👖'},{key:'feet',name:'Feet',icon:'🥾'},
+  {key:'mainhand',name:'Main Hand',icon:'⚔️'},{key:'offhand',name:'Off Hand',icon:'🛡️'},{key:'trinket',name:'Trinket',icon:'💍'},
+];
+const TRAVEL_LABELS = ['Crawling','Sluggish','Plodding','Unhurried','Steady','Brisk','Swift','Fleet','Blazing','Lightning-quick'];
+
+let _uid = 1;
+function uid(prefix){ return prefix + '_' + (_uid++) + '_' + Math.random().toString(36).slice(2,7); }
+
+/* deterministic skill tree builder: 4 power skills + 2 major-stat skills, ids based on ownerId+index
+   so saved skill levels survive reloads (do NOT use the random uid() here). */
+function buildTree(ownerId, powerDefs, statDefs){
+  const tree = [];
+  powerDefs.forEach((p,i)=>{
+    tree.push({ id: ownerId+'_p'+i, name:p[0], type:p[1], desc:p[2], scalingStat:p[3], base:p[4], level:0, maxLevel:10 });
+  });
+  statDefs.forEach((s,i)=>{
+    tree.push({ id: ownerId+'_s'+i, name:s[0], type:'stat', desc:s[1], statKey:s[2], per:s[3], level:0, maxLevel:10 });
+  });
+  return tree;
+}
+
+/* =========================================================
+   RACES (12) — resist maps 1:1 to the 12 elements/regions.
+   Player begins in the region matching their race's resistance.
+   ========================================================= */
+function mkRace(name,icon,desc,primary,secondary,resistKey,powerDefs,statDefs,carryBonus,hpPerLevel,mpPerLevel,hasMount,canFly){
+  const id = 'race_'+name.toLowerCase();
+  return {
+    id, name, icon, desc, primary, secondary,
+    resist: resistKey, resistAmt: 42,
+    bonus: STAT_KEYS.reduce((o,k)=>{ o[k]= k===primary?7:(k===secondary?4:1); return o; },{}),
+    carryBonus, hpPerLevel, mpPerLevel, xpMod: 1, hasMount: !!hasMount, canFly: !!canFly,
+    skills: buildTree(id, powerDefs, statDefs)
+  };
+}
+
+const RACES = [
+  mkRace('Human','🧑','Adaptable wanderers whose willpower bends fate itself. Starts with a loyal riding horse.','luck','wis','arcane',
+    [['Fated Strike','power','A blow guided by fortune.','luck',9],
+     ['Quick Study','power','Rapid focus empowers the next cast.','wis',7],
+     ['Silver Tongue','passive','Improves gold earned from all sources.','luck',5],
+     ['Second Wind','passive','Chance to shrug off a killing blow.','vit',6]],
+    [['Ambition','Raises Luck significantly.','luck',5],
+     ['Wanderer\'s Resolve','Raises Wisdom significantly.','wis',5]],
+    2,6,4,true,false),
+  mkRace('Elf','🧝','Graceful forestfolk attuned to wind and starlight.','agi','int','air',
+    [['Windblade','power','A gust-quickened slash.','agi',10],
+     ['Starfire Bolt','power','A crackling bolt of old magic.','int',11],
+     ['Moonlit Step','passive','Improves autocast readiness.','agi',5],
+     ['Keen Eye','passive','Improves critical strike chance.','agi',6]],
+    [['Grace of the Grove','Raises Agility significantly.','agi',5],
+     ['Ancient Insight','Raises Intellect significantly.','int',5]],
+    1,5,7,false,false),
+  mkRace('Dwarf','🧔','Stout mountainfolk, unshaken as the stone they carve.','vit','str','earth',
+    [['Stonehammer','power','A crushing, earthen blow.','str',11],
+     ['Bedrock Bulwark','passive','Improves defense against physical hits.','vit',7],
+     ['Deepforge Grit','passive','Improves resistance to all elements.','vit',5],
+     ['Tunnel Rush','power','A charging strike from the dark.','str',9]],
+    [['Mountain\'s Heart','Raises Vitality significantly.','vit',6],
+     ['Ironclad Might','Raises Strength significantly.','str',5]],
+    3,9,2,false,false),
+  mkRace('Orc','🧌','Fierce warborn whose blood runs hot as flame.','str','vit','fire',
+    [['Rage Cleave','power','A furious, burning cleave.','str',12],
+     ['Bloodfire','power','Ignites the foe with inner rage.','str',10],
+     ['Warcry','passive','Improves damage as health drops.','str',6],
+     ['Thick Hide','passive','Improves max health.','vit',6]],
+    [['Savage Fury','Raises Strength significantly.','str',6],
+     ['Warborn Vigor','Raises Vitality significantly.','vit',5]],
+    2,8,2,false,false),
+  mkRace('Gnome','🧙','Inventive tinkerers who spark lightning from copper coils.','int','luck','lightning',
+    [['Spark Jolt','power','A quick electric jab.','int',9],
+     ['Overcharge','power','A charged, arcing bolt.','int',12],
+     ['Tinker\'s Insight','passive','Improves forge and enchant results.','int',5],
+     ['Lucky Gadget','passive','Small chance to double loot.','luck',6]],
+    [['Bright Mind','Raises Intellect significantly.','int',6],
+     ['Fortunate Spark','Raises Luck significantly.','luck',5]],
+    2,4,7,false,false),
+  mkRace('Halfling','🍀','Easygoing folk who slip through field and thicket unseen.','agi','luck','nature',
+    [['Bramblesting','power','A quick, thorned jab.','agi',8],
+     ['Lucky Strike','power','A strike aided by sheer luck.','luck',9],
+     ['Light Feet','passive','Improves travel speed slightly.','agi',4],
+     ['Forager\'s Sense','passive','Improves food/drink effectiveness.','luck',4]],
+    [['Nimble Grace','Raises Agility significantly.','agi',5],
+     ['Charmed Fortune','Raises Luck significantly.','luck',5]],
+    4,5,4,false,false),
+  mkRace('Dragonborn','🐉','Scaled descendants of wyrms, armored like living metal.','str','int','metal',
+    [['Wyrm Claw','power','A metal-hard raking claw.','str',11],
+     ['Draconic Breath','power','A scouring elemental breath.','int',12],
+     ['Scaled Plating','passive','Improves physical damage reduction.','vit',6],
+     ['Ancestral Pride','passive','Improves damage vs bosses.','str',5]],
+    [['Draconic Power','Raises Strength significantly.','str',6],
+     ['Elder Wisdom','Raises Intellect significantly.','int',5]],
+    2,7,5,false,false),
+  mkRace('Tiefling','😈','Infernal-blooded outcasts wreathed in living shadow.','int','agi','shadow',
+    [['Shadow Lash','power','A whip of curling darkness.','int',10],
+     ['Hellspark','power','A quick infernal jab.','agi',9],
+     ['Umbral Veil','passive','Improves evasion.','agi',5],
+     ['Cursed Fortune','passive','Improves rare drop chance.','luck',5]],
+    [['Infernal Cunning','Raises Intellect significantly.','int',5],
+     ['Shadowstep','Raises Agility significantly.','agi',5]],
+    2,5,6,false,false),
+  mkRace('Aasimar','😇','Celestial-touched souls that carry a sliver of dawnlight.','wis','faith','light',
+    [['Radiant Smite','power','A blow wreathed in holy light.','wis',11],
+     ['Dawnray','power','A searing beam of light.','wis',10],
+     ['Halo Ward','passive','Improves healing received.','wis',5],
+     ['Blessed Body','passive','Improves max mana.','wis',5]],
+    [['Celestial Grace','Raises Wisdom significantly.','wis',6],
+     ['Radiant Faith','Raises Faith significantly.','faith',5]],
+    2,6,6,false,false),
+  mkRace('Goliath','🏔️','Towering glacier-born giants of unbending endurance. Starts with a sturdy war-ram mount.','vit','str','ice',
+    [['Glacier Fist','power','A bone-chilling punch.','str',12],
+     ['Avalanche Slam','power','A crushing, icy slam.','str',13],
+     ['Frozen Endurance','passive','Improves max health greatly.','vit',7],
+     ['Unshakable','passive','Reduces stamina cost of battles.','vit',4]],
+    [['Titan\'s Frame','Raises Vitality significantly.','vit',7],
+     ['Glacial Power','Raises Strength significantly.','str',5]],
+    5,10,1,true,false),
+  mkRace('Fae','🧚','Otherworldly tricksters drifting between pools of glamour. Can fly, greatly increasing travel speed.','agi','wis','water',
+    [['Tidal Glamour','power','A shimmering, watery illusion strike.','wis',10],
+     ['Fae Prank','power','A mischievous quick jab.','agi',8],
+     ['Glamoured Step','passive','Improves autocast readiness.','agi',5],
+     ['Otherworldly Luck','passive','Improves rare drop chance.','luck',6]],
+    [['Fae Quickness','Raises Agility significantly.','agi',5],
+     ['Glamoured Insight','Raises Wisdom significantly.','wis',5]],
+    2,5,6,false,true),
+  mkRace('Revenant','💀','The restless dead, bound to the world by unfinished purpose.','int','vit','void',
+    [['Soul Rend','power','A tearing strike from beyond.','int',12],
+     ['Grave Chill','power','A numbing touch of the void.','vit',9],
+     ['Deathless','passive','Chance to fight on at 1 health.','vit',5],
+     ['Hollow Focus','passive','Improves mana regeneration.','int',5]],
+    [['Undying Will','Raises Vitality significantly.','vit',6],
+     ['Grave Intellect','Raises Intellect significantly.','int',6]],
+    2,7,6,false,false),
+];
+
+/* =========================================================
+   CLASSES (12)
+   ========================================================= */
+function mkClass(name,icon,desc,primary,secondary,travelSpeed,hasMount,hasTravelSkill,canTeleport,isMelee,powerDefs,statDefs,hpPerLevel,mpPerLevel,carryBonus){
+  const id = 'class_'+name.toLowerCase();
+  return {
+    id, name, icon, desc, primary, secondary,
+    travelSpeed, hasMount, hasTravelSkill, canTeleport, isMelee,
+    bonus: STAT_KEYS.reduce((o,k)=>{ o[k]= k===primary?7:(k===secondary?4:1); return o; },{}),
+    hpPerLevel, mpPerLevel, carryBonus, xpMod:1,
+    skills: buildTree(id, powerDefs, statDefs)
+  };
+}
+
+const CLASSES = [
+  mkClass('Warrior','⚔️','Frontline fighters who overpower foes with raw steel.','str','vit',4,false,false,false,true,
+    [['Shield Bash','attack','A staggering bash with the shield.','str',11],
+     ['Whirlwind','attack','A spinning slash at all nearby foes.','str',13],
+     ['Battle Focus','spell','A brief surge of combat clarity.','str',9],
+     ['Iron Resolve','passive','Improves damage reduction while below half health.','vit',6]],
+    [['Warrior\'s Might','Raises Strength significantly.','str',6],
+     ['Hardened Frame','Raises Vitality significantly.','vit',6]],
+    9,2,3),
+  mkClass('Mage','🧙‍♂️','Arcane scholars who bend raw magic into devastating bolts. Can teleport short distances to travel faster.','int','wis',3,false,false,true,false,
+    [['Arcane Bolt','spell','A bolt of pure arcane force.','int',12],
+     ['Mana Burn','spell','Burns the foe with volatile mana.','int',13],
+     ['Ley Surge','attack','A surging line of magic.','int',11],
+     ['Arcane Mind','passive','Improves mana regeneration.','wis',5]],
+    [['Archmagic Insight','Raises Intellect significantly.','int',7],
+     ['Ley Attunement','Raises Wisdom significantly.','wis',5]],
+    3,10,2),
+  mkClass('Rogue','🗡️','Shadow-footed killers who strike from unseen angles.','agi','luck',7,false,true,false,true,
+    [['Backstab','attack','A precise strike from the blind side.','agi',13],
+     ['Poison Blade','attack','A blade slick with venom.','agi',10],
+     ['Smoke Step','spell','Vanish briefly, then reappear striking.','agi',9],
+     ['Deadly Precision','passive','Improves critical strike chance.','luck',6]],
+    [['Shadow Mastery','Raises Agility significantly.','agi',7],
+     ['Gambler\'s Edge','Raises Luck significantly.','luck',5]],
+    5,3,4),
+  mkClass('Cleric','✝️','Devout healers whose faith channels searing holy power.','wis','faith',5,false,false,false,false,
+    [['Smite','spell','A judgment of holy light.','wis',11],
+     ['Radiant Burst','spell','An exploding burst of light.','wis',12],
+     ['Mending Word','spell','A quiet word that knits wounds.','wis',8],
+     ['Sacred Vigil','passive','Improves max health and mana.','wis',5]],
+    [['Divine Wisdom','Raises Wisdom significantly.','wis',7],
+     ['Unshaken Faith','Raises Faith significantly.','faith',5]],
+    6,8,3),
+  mkClass('Ranger','🏹','Wilderness hunters who ride the wind on loyal steeds.','agi','wis',8,true,false,false,false,
+    [['Aimed Shot','attack','A precisely aimed arrow.','agi',12],
+     ['Volley','attack','A rain of arrows.','agi',11],
+     ['Nature\'s Call','spell','Calls on nature for a burst of power.','wis',9],
+     ['Hunter\'s Focus','passive','Improves critical strike chance.','agi',5]],
+    [['Trueshot','Raises Agility significantly.','agi',6],
+     ['Wild Insight','Raises Wisdom significantly.','wis',5]],
+    5,5,4),
+  mkClass('Paladin','🛡️','Sworn knights whose warhorse charges into holy war.','str','faith',8,true,false,false,true,
+    [['Holy Strike','attack','A blade wreathed in righteous light.','str',11],
+     ['Judgment','spell','A searing verdict from above.','wis',11],
+     ['Aegis','passive','Improves damage reduction.','vit',6],
+     ['Consecration','spell','Hallows the ground beneath the foe.','wis',9]],
+    [['Righteous Strength','Raises Strength significantly.','str',6],
+     ['Holy Conviction','Raises Faith significantly.','faith',6]],
+    8,5,3),
+  mkClass('Necromancer','☠️','Grim spellcasters who command death itself.','int','vit',3,false,false,false,false,
+    [['Death Bolt','spell','A bolt of withering necrotic force.','int',13],
+     ['Drain Life','spell','Siphons vitality from the foe.','int',10],
+     ['Bone Spear','attack','A spear of jagged bone.','int',11],
+     ['Grim Resilience','passive','Improves max health.','vit',5]],
+    [['Necrotic Power','Raises Intellect significantly.','int',7],
+     ['Grave Endurance','Raises Vitality significantly.','vit',5]],
+    5,9,3),
+  mkClass('Druid','🌲','Shapeshifting wardens who wield the fury of the wild.','wis','int',5,false,false,false,false,
+    [['Thornburst','spell','A burst of whipping thorns.','wis',11],
+     ['Wildclaw','attack','A feral, clawed strike.','str',10],
+     ['Sunfire Bloom','spell','A blooming flare of natural energy.','int',10],
+     ['Verdant Renewal','passive','Improves health regeneration.','wis',5]],
+    [['Wildheart','Raises Wisdom significantly.','wis',6],
+     ['Primal Insight','Raises Intellect significantly.','int',5]],
+    6,7,4),
+  mkClass('Monk','🥋','Disciplined martial artists who channel focused chi strikes.','agi','str',6,false,false,false,true,
+    [['Flurry of Blows','attack','A rapid chain of strikes.','agi',10],
+     ['Palm Strike','attack','A concussive open-palm blow.','str',11],
+     ['Inner Peace','spell','A calming surge that restores focus.','wis',8],
+     ['Iron Body','passive','Improves damage reduction.','vit',5]],
+    [['Flowing Technique','Raises Agility significantly.','agi',6],
+     ['Disciplined Power','Raises Strength significantly.','str',6]],
+    6,4,5),
+  mkClass('Bard','🎻','Traveling performers whose songs quicken step and spirit.','luck','int',7,false,true,false,false,
+    [['Discordant Note','attack','A jarring, painful chord.','int',9],
+     ['Rallying Verse','spell','A verse that emboldens the caster.','luck',9],
+     ['Cutting Refrain','attack','A sharp, biting melody.','int',10],
+     ['Inspiring Tune','passive','Improves gold and XP gain.','luck',5]],
+    [['Virtuoso Charm','Raises Luck significantly.','luck',6],
+     ['Lyric Insight','Raises Intellect significantly.','int',5]],
+    4,6,3),
+  mkClass('Warlock','🔮','Pact-bound casters who trade vitality for forbidden power. Can teleport short distances to travel faster.','int','luck',4,false,false,true,false,
+    [['Chaos Bolt','spell','An unstable bolt of pact-fueled magic.','int',13],
+     ['Curse of Ruin','spell','Curses the foe with lingering decay.','int',10],
+     ['Void Tendril','attack','A grasping tendril from the void.','int',11],
+     ['Pact Fortune','passive','Improves rare drop chance.','luck',6]],
+    [['Forbidden Power','Raises Intellect significantly.','int',7],
+     ['Pactbound Fortune','Raises Luck significantly.','luck',5]],
+    4,9,3),
+  mkClass('Berserker','🪓','Unrestrained brawlers who grow deadlier as blood is spilled.','str','agi',5,false,false,false,true,
+    [['Reckless Swing','attack','A powerful, unguarded swing.','str',13],
+     ['Bloodfury','passive','Improves damage as health drops.','str',6],
+     ['Savage Leap','attack','A crashing leap attack.','agi',10],
+     ['Adrenaline','passive','Improves autocast readiness.','agi',5]],
+    [['Berserker Strength','Raises Strength significantly.','str',7],
+     ['Feral Speed','Raises Agility significantly.','agi',5]],
+    8,2,4),
+];
+
+/* =========================================================
+   REGIONS (12) — one per element, each with 3 bosses.
+   ========================================================= */
+const CREATURES = ['Imp','Wolf','Serpent','Golem','Wisp','Sprite','Bat','Spider','Hound','Elemental','Knight','Wraith'];
+const BOSS_ROOTS = ['Ignarok','Leviathine','Terrakhan','Zephyross','Glacividon','Voltrazar','Thornmaw','Umbrathis','Solarion','Arcanexus','Ferrovax','Nullkyrie'];
+const BOSS_EPITHETS = ['the Warden','the Harbinger','the Sovereign'];
+const REGION_NAMES = ['Emberfall Wastes','Tidefen Depths','Stonemarch Highlands','Skyreach Peaks','Frostspire Glacier',
+  'Stormcrown Mesa','Verdant Hollow','Duskmire Fen','Sunspire Sanctum','Astral Veil','Ironscar Foundry','Hollow Expanse'];
+const REGION_DESC = [
+  'A blackened wasteland where rivers of magma carve through ash.',
+  'Sunken ruins drowned beneath crushing, restless tides.',
+  'Windswept highlands of raw granite and old stone circles.',
+  'Jagged peaks where the wind never stops screaming.',
+  'A glacier of endless blue ice, cracking under ancient weight.',
+  'A storm-wracked mesa struck by lightning every few minutes.',
+  'A dense, overgrown hollow thick with thorn and vine.',
+  'A fog-choked fen where shadows move against the light.',
+  'A radiant sanctuary carved from sun-warmed marble.',
+  'A rift in reality where starlight pools like water.',
+  'A roaring foundry of clanking gears and molten metal.',
+  'A silent expanse of nothing, where sound itself fades.',
+];
+
+const REGIONS = ELEMENTS.map((el,i)=>({
+  id: el.key,
+  name: REGION_NAMES[i],
+  desc: REGION_DESC[i],
+  element: el.key,
+  requiredResist: 18 + i*3,
+  minLevel: i*3 + 1,
+  bosses: BOSS_EPITHETS.map((ep,bi)=>({
+    name: `${BOSS_ROOTS[i]}, ${ep}`,
+    element: el.key,
+    hpMult: 4 + bi*2.5,
+    essenceDropChance: 0.3 + bi*0.12,
+    rarityFloor: 1+bi
+  })),
+  monsters: CREATURES.map(c => ({ name: `${el.name} ${c}`, element: el.key }))
+}));
+function regionById(id){ return REGIONS.find(r=>r.id===id); }
+function completedRegionsCount(){
+  if(!state || !state.regionProgress) return 0;
+  return Object.values(state.regionProgress).filter(p=>p.completed).length;
+}
+function regionRequiredResist(reg){ return reg.requiredResist + completedRegionsCount()*4; }
+function allRegionsCompleted(){ return completedRegionsCount() >= REGIONS.length; }
+
+/* =========================================================
+   FACTIONS (12) — contribution up to 20, max reward = chest armor + title
+   ========================================================= */
+const FACTION_DEFS = [
+  ['Ironvale Legion','⚔️','A disciplined army of veteran soldiers.','str',2],
+  ['Silent Blades','🗡️','A covert guild of contract killers.','agi',2],
+  ['Circle of Embers','🔥','Scholars devoted to fire magic.','int',2],
+  ['Wardens of the Deep Root','🌲','Rangers who protect the old forests.','wis',2],
+  ['Gilded Exchange','💰','A merchant cartel obsessed with profit.','luck',2],
+  ['Ashen Vow','🩸','Zealous knights bound by blood oaths.','vit',2],
+  ['Starlit Conclave','🔮','Astronomer-mages who study the void.','int',2],
+  ['Frosthold Clans','❄️','Hardy clanfolk of the northern ice.','vit',2],
+  ['Sunfire Order','✨','Holy militants who burn out corruption.','faith',2],
+  ['Ironscar Guild','⚙️','Engineers and smiths of the foundry city.','str',2],
+  ['Duskmire Cabal','🌑','Whisper-cult that trades in secrets.','luck',2],
+  ['Verdant Pact','🍃','Druids sworn to protect the wilds.','agi',2],
+];
+/* Each faction's max-rank reward is a distinct armor piece, thematically matched to the faction. */
+const FACTION_ARMOR_REWARD = [
+  {slot:'chest', icon:'👕', label:'War-Plate'},              // Ironvale Legion — heavy infantry armor
+  {slot:'hands', icon:'🧤', label:"Assassin's Gloves"},      // Silent Blades
+  {slot:'head', icon:'🪖', label:'Ember-Crown'},             // Circle of Embers
+  {slot:'feet', icon:'🥾', label:'Stalker Boots'},           // Wardens of the Deep Root
+  {slot:'trinket', icon:'💍', label:'Fortune Signet'},       // Gilded Exchange
+  {slot:'legs', icon:'👖', label:'Blood-Forged Greaves'},    // Ashen Vow
+  {slot:'back', icon:'🧣', label:'Voidwoven Cloak'},         // Starlit Conclave
+  {slot:'shoulders', icon:'🎽', label:'Glacial Pauldrons'},  // Frosthold Clans
+  {slot:'waist', icon:'🎗️', label:'Radiant Sash'},           // Sunfire Order
+  {slot:'offhand', icon:'🛡️', label:'Foundry Bulwark'},      // Ironscar Guild
+  {slot:'neck', icon:'📿', label:'Whispering Amulet'},       // Duskmire Cabal
+  {slot:'chest', icon:'👕', label:'Bark-Forged Chestguard'}, // Verdant Pact
+];
+const FACTIONS = FACTION_DEFS.map((f,i)=>({id:f[0].toLowerCase().replace(/[^a-z]+/g,'_'),name:f[0],icon:f[1],desc:f[2],statKey:f[3],perRank:f[4],maxRank:20,reward:FACTION_ARMOR_REWARD[i]}));
+
+/* =========================================================
+   DEITIES (12) — favor up to 20, max reward = weapon + title
+   ========================================================= */
+const DEITY_DEFS = [
+  ['Solmara, the Dawnflame','☀️','Goddess of fire and renewal.','str'],
+  ['Nyxthera, the Tideborn','🌊','Goddess of the endless sea.','wis'],
+  ['Grommund, Stonefather','⛰️','God of mountains and endurance.','vit'],
+  ['Aerivel, the Windsong','🍃','Goddess of wind and freedom.','agi'],
+  ['Kryosa, the Frostwarden','❄️','Goddess of winter and stillness.','vit'],
+  ['Thandor, the Stormcrown','⚡','God of storms and judgement.','str'],
+  ['Sylvane, the Wildmother','🌿','Goddess of growth and the wilds.','wis'],
+  ['Umbros, the Nightveil','🌑','God of shadow and secrets.','luck'],
+  ['Auralis, the Lightbringer','✨','Goddess of light and hope.','faith'],
+  ['Vexanor, the Starweaver','🔮','God of arcane fate and mystery.','int'],
+  ['Ferrix, the Forgelord','⚙️','God of craft and invention.','int'],
+  ['Mortessa, the Hollow Queen','🕳️','Goddess of death and the void.','int'],
+];
+/* Each deity's max-favor reward is a distinct weapon, thematically matched to the deity. */
+const DEITY_WEAPON_REWARD = [
+  {icon:'⚔️', label:'Sunflare Greatsword'},    // Solmara
+  {icon:'🔱', label:'Tideborn Trident'},       // Nyxthera
+  {icon:'🔨', label:"Stonefather's Warhammer"},// Grommund
+  {icon:'🏹', label:'Windsong Longbow'},       // Aerivel
+  {icon:'🗡️', label:"Frostwarden's Glaive"},   // Kryosa
+  {icon:'⚔️', label:'Stormcrown Warblade'},    // Thandor
+  {icon:'🪄', label:"Wildmother's Bloomstaff"},// Sylvane
+  {icon:'🗡️', label:'Nightveil Fang'},         // Umbros
+  {icon:'🔨', label:"Lightbringer's Sunmace"}, // Auralis
+  {icon:'🪄', label:"Starweaver's Rod"},       // Vexanor
+  {icon:'🪓', label:"Forgelord's Battleaxe"},  // Ferrix
+  {icon:'🪓', label:"Hollow Queen's Reaper"},  // Mortessa
+];
+const DEITIES = DEITY_DEFS.map((d,i)=>({id:d[0].split(',')[0].toLowerCase(),name:d[0],icon:d[1],desc:d[2],statKey:d[3],perFavor:2,maxFavor:20,reward:DEITY_WEAPON_REWARD[i]}));
+
+/* =========================================================
+   CULTURES (12) — reputation up to 20, max reward = title
+   ========================================================= */
+const CULTURE_DEFS = [
+  ['Emberfolk','🔥','fire','Desert-dwelling smiths who worship the forge-flame.'],
+  ['Tidewrought','🌊','water','Seafaring clans who read fortunes in the tide.'],
+  ['Stonebound','⛰️','earth','Cliffside masons who carve their history in rock.'],
+  ['Skydancers','🍃','air','Nomads who traverse the high mountain winds.'],
+  ['Frostkin','❄️','ice','Glacier tribes who endure the harshest winters.'],
+  ['Stormcallers','⚡','lightning','Mesa-dwellers who read omens in lightning.'],
+  ['Groveborn','🌿','nature','Forest folk who live in harmony with the wild.'],
+  ['Duskwalkers','🌑','shadow','Fen-dwellers who move unseen through the mist.'],
+  ['Sunwardens','✨','light','Temple-keepers devoted to eternal light.'],
+  ['Starforged','🔮','arcane','Astral scholars who study the rift.'],
+  ['Gearkin','⚙️','metal','Foundry clans who build wonders of iron.'],
+  ['Hollowed','🕳️','void','A quiet people who speak with the silence.'],
+];
+const CULTURE_STAT_CYCLE = STAT_KEYS; // cycle through the 7 core stats
+const CULTURES = CULTURE_DEFS.map((c,i)=>({id:c[0].toLowerCase(),name:c[0],icon:c[1],element:c[2],desc:c[3],
+  statKey: CULTURE_STAT_CYCLE[i%CULTURE_STAT_CYCLE.length], perRep:1.5, maxRep:20}));
+
+/* =========================================================
+   COMPANIONS (12) — elemental zodiac animals, one per region
+   ========================================================= */
+const ZODIAC = ['Tiger','Ox','Serpent','Crane','Wolf','Stag','Owl','Panther','Phoenix','Fox','Bear','Raven'];
+const COMPANION_QUIPS = [
+  "\"Are we there yet? Oh — we're fighting. Never mind.\"",
+  "\"I've seen scarier bread rolls.\"",
+  "\"Do you smell that? That's victory. Or my fur.\"",
+  "\"Statistically, this should be fine.\"",
+  "\"I call this one the 'oh no' maneuver.\"",
+  "\"Back home we'd call this a Tuesday.\"",
+];
+const COMPANIONS = ELEMENTS.map((el,i)=>{
+  const id = 'comp_'+el.key;
+  const name = `${el.name} ${ZODIAC[i]}`;
+  return {
+    id, name, icon: el.icon, element: el.key, regionId: el.key,
+    desc: `A ${ZODIAC[i].toLowerCase()} spirit bound to the element of ${el.name.toLowerCase()}, found after enough battles in ${REGION_NAMES[i]}.`,
+    unlockKills: 100,
+    skills: buildTree(id, [
+      [`${ZODIAC[i]}'s Bite`,'support',`Occasionally strikes alongside you.`,'agi',6],
+      [`${el.name} Ward`,'support',`Chips away at foes with elemental energy.`,'int',6],
+      [`Loyal Guard`,'support',`Reduces incoming damage slightly.`,'vit',4],
+      [`Keen Nose`,'support',`Improves the companion's chance to find rare items.`,'luck',5],
+    ], [
+      [`Bonded Vigor`,`Raises Vitality significantly while this companion is active.`,'vit',3],
+      [`Bonded Luck`,`Raises Luck significantly while this companion is active.`,'luck',3],
+    ])
+  };
+});
+function companionById(id){ return COMPANIONS.find(c=>c.id===id); }
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let state = null;
+let gameSpeed = 1;
+let saveTimer = null;
+let pendingReincarnate = null; // {bonus, count} carried across a reincarnation
+
+function freshState(raceId, classId, name){
+  const race = RACES.find(r=>r.id===raceId);
+  const cls = CLASSES.find(c=>c.id===classId);
+  const s = {
+    name: name || 'Adventurer',
+    raceId, classId,
+    level:1, xp:0,
+    skillPoints:1,
+    hp:1, mp:1,
+    gold: 50,
+    stamina:100,
+    thirst:100, hunger:100, mood:70,
+    fatigue:20,
+    hasMount: !!cls.hasMount || !!race.hasMount,
+    regionId: race.resist, // start in the region matching the race's high resistance
+    faction: null, factionContribution:{}, factionMaxRewarded:{},
+    deity: null, deityFavor:{}, deityMaxRewarded:{},
+    cultureRep:{}, cultureMaxRewarded:{},
+    bags:0,
+    equipment: {}, inventory: [],
+    autoSell: {common:false,uncommon:false,rare:false,epic:false,legendary:false,mythic:false},
+    autoScrap:{common:false,uncommon:false,rare:false,epic:false,legendary:false,mythic:false},
+    encounterTimer: 30, autocastTimer: 10, monster:null,
+    timeOfDay:'Dawn', season:'Spring', dayTick:0,
+    log: [], totalKills:0, deaths:0,
+    scrapDust:0, essences:{},
+    regionProgress:{}, regionKills:{},
+    unlockedCompanions:[], activeCompanionId:null, companionLevels:{}, companionQuipTick:0,
+    unlockedTitles:[], activeTitleId:null,
+    cowMinigamePassed:false, cowFinalBossDefeated:false,
+    reincarnations:0, permStatBonus:{},
+    atTavern:false,
+    paused:false,
+  };
+  REGIONS.forEach(r=>{ s.regionProgress[r.id] = {bossesKilled:[false,false,false], completed:false}; });
+  return s;
+}
+
+function race(){ return RACES.find(r=>r.id===state.raceId); }
+function cls(){ return CLASSES.find(c=>c.id===state.classId); }
+function region(){ return regionById(state.regionId); }
+
+function ensureSkillLevels(){
+  if(!state.skillLevels) state.skillLevels = {};
+  race().skills.forEach(s=>{ if(!(s.id in state.skillLevels)) state.skillLevels[s.id]=0; });
+  cls().skills.forEach(s=>{ if(!(s.id in state.skillLevels)) state.skillLevels[s.id]=0; });
+  COMPANIONS.forEach(c=>{ c.skills.forEach(s=>{ if(!(s.id in state.skillLevels)) state.skillLevels[s.id]=0; }); });
+}
+function skillLevel(skillId){ return state.skillLevels[skillId] || 0; }
+function setSkillLevel(skillId, lvl){ state.skillLevels[skillId] = lvl; }
+
+/* ---------------- DERIVED STATS ---------------- */
+function baseStats(){
+  const r = race(), c = cls();
+  const s = {};
+  STAT_KEYS.forEach(k=>{ s[k] = 10 + r.bonus[k] + c.bonus[k] + (state.level-1)*1; });
+  return s;
+}
+
+function equipmentStats(){
+  const s = emptyStatObj();
+  const resist = {};
+  Object.values(state.equipment).forEach(it=>{
+    if(!it) return;
+    Object.entries(it.stats||{}).forEach(([k,v])=>{ s[k]=(s[k]||0)+v; });
+    if(it.resistElement) resist[it.resistElement] = (resist[it.resistElement]||0) + (it.resistAmt||0);
+  });
+  return {s, resist};
+}
+function skillStatBonus(){
+  const s = emptyStatObj();
+  ensureSkillLevels();
+  [...race().skills, ...cls().skills].forEach(sk=>{
+    if(sk.type==='stat'){ const lvl = skillLevel(sk.id); if(lvl>0) s[sk.statKey] += sk.per*lvl; }
+  });
+  const comp = activeCompanion();
+  if(comp){
+    comp.skills.forEach(sk=>{ if(sk.type==='stat'){ const lvl=skillLevel(sk.id); if(lvl>0) s[sk.statKey]+=sk.per*lvl; } });
+  }
+  return s;
+}
+function factionStatBonus(){
+  const s = emptyStatObj();
+  if(state.faction){
+    const f = FACTIONS.find(x=>x.id===state.faction);
+    const rank = Math.min(f.maxRank, state.factionContribution[state.faction]||0);
+    if(f) s[f.statKey] += f.perRank*rank;
+  }
+  return s;
+}
+function deityStatBonus(){
+  const s = emptyStatObj();
+  if(state.deity){
+    const d = DEITIES.find(x=>x.id===state.deity);
+    const rank = Math.min(d.maxFavor, state.deityFavor[state.deity]||0);
+    if(d) s[d.statKey] += d.perFavor*rank;
+  }
+  return s;
+}
+function cultureStatBonus(){
+  const s = emptyStatObj();
+  CULTURES.forEach(cu=>{
+    const rank = Math.min(cu.maxRep, state.cultureRep[cu.id]||0);
+    if(rank>0) s[cu.statKey] += cu.perRep*rank;
+  });
+  return s;
+}
+function titleStatBonus(){
+  const s = emptyStatObj();
+  if(state.activeTitleId){
+    const t = state.unlockedTitles.find(x=>x.id===state.activeTitleId);
+    if(t) s[t.statKey] += t.amount;
+  }
+  return s;
+}
+
+/* raw core stats WITHOUT the over-capacity penalty or the faith/luck global bump —
+   used internally to avoid circular calculation with carry capacity. */
+function rawCoreStats(){
+  const b = baseStats(), eq = equipmentStats(), sk = skillStatBonus(), fa = factionStatBonus(),
+        de = deityStatBonus(), cu = cultureStatBonus(), ti = titleStatBonus(), perm = state.permStatBonus||{};
+  const out = {};
+  STAT_KEYS.forEach(k=>{ out[k] = b[k] + eq.s[k] + sk[k] + fa[k] + de[k] + cu[k] + ti[k] + (perm[k]||0); });
+  return out;
+}
+
+function carryCapacity(){
+  const str = rawCoreStats().str;
+  return 20 + race().carryBonus + cls().carryBonus + Math.floor(state.level/5) + state.bags + Math.floor(str/5);
+}
+function equippedCount(){ return Object.values(state.equipment).filter(Boolean).length; }
+function carriedCount(){ return state.inventory.length + equippedCount(); }
+function overCapacity(){ return carriedCount() >= carryCapacity(); }
+
+function effectiveStats(){
+  const eq = equipmentStats(), sk = skillStatBonus(), fa = factionStatBonus(),
+        de = deityStatBonus(), cu = cultureStatBonus(), ti = titleStatBonus(), perm = state.permStatBonus||{};
+  const core = rawCoreStats();
+  const out = emptyStatObj();
+  STAT_KEYS.forEach(k=>{ out[k] = core[k]; });
+  SECONDARY_KEYS.forEach(k=>{ out[k] = SECONDARY_BASE[k] + eq.s[k] + sk[k] + fa[k] + de[k] + cu[k] + ti[k] + (perm[k]||0); });
+  // derived contributions from core stats
+  out.evasion += out.agi*0.01;
+  out.magicBonus += out.int*0.1;
+  out.experienceBonus += out.wis*1.5;
+  // Faith & Luck: +0.01% to every OTHER stat, stacking additively
+  const globalBump = (out.faith + out.luck) * 0.0001;
+  ALL_STAT_KEYS.forEach(k=>{ if(k==='faith'||k==='luck') return; out[k] = out[k]*(1+globalBump); });
+  if(overCapacity()){
+    out.str*=0.92; out.agi*=0.92; out.int*=0.92; out.wis*=0.92;
+  }
+  ALL_STAT_KEYS.forEach(k=>{ out[k] = round2(out[k]); });
+  return out;
+}
+
+function elementResistances(){
+  const res = {};
+  ELEMENTS.forEach(e=>res[e.key]=0);
+  res[race().resist] += race().resistAmt;
+  CULTURES.forEach(cu=>{ const rank = Math.min(cu.maxRep, state.cultureRep[cu.id]||0); if(rank>0) res[cu.element] += rank*3; });
+  const eq = equipmentStats();
+  Object.entries(eq.resist).forEach(([k,v])=>{ res[k]=(res[k]||0)+v; });
+  return res;
+}
+
+function activeCompanion(){ return state.activeCompanionId ? companionById(state.activeCompanionId) : null; }
+
+function maxHP(){
+  const st = effectiveStats();
+  const factionRank = state.faction ? Math.min(20, state.factionContribution[state.faction]||0) : 0;
+  let hp = 50 + (race().hpPerLevel + cls().hpPerLevel + factionRank) * state.level;
+  hp = hp * (1 + st.vit*0.01); // Vitality: +1% max HP per point
+  if(state.hunger < 20) hp *= 0.72; // low hunger decreases max HP
+  return Math.max(20, Math.round(hp));
+}
+function maxMP(){
+  const st = effectiveStats();
+  const favor = state.deity ? Math.min(20, state.deityFavor[state.deity]||0) : 0;
+  let mp = 20 + (race().mpPerLevel + cls().mpPerLevel + favor) * state.level;
+  mp = mp * (1 + st.int*0.01); // Intellect: +1% max MP per point
+  if(state.thirst < 20) mp *= 0.72; // low thirst decreases mana
+  return Math.max(10, Math.round(mp));
+}
+function xpToNext(){ return Math.round(45 * Math.pow(state.level,1.55) + 30); }
+function moodXpMult(){ return 0.8 + (state.mood/100)*0.5; } // high mood increases XP gain
+function xpMult(){
+  const st = effectiveStats();
+  return moodXpMult() * (1 + st.experienceBonus/100) * race().xpMod * cls().xpMod;
+}
+
+function travelSpeedRaw(){
+  let sp = cls().travelSpeed;
+  if(state.hasMount) sp += 3; // owned mount (class-granted, race-granted, or purchased)
+  if(race().canFly) sp += 4; // Fae flight
+  if(cls().canTeleport) sp += 3; // Mage & Warlock teleport
+  ensureSkillLevels();
+  if(cls().hasTravelSkill){
+    cls().skills.forEach(s=>{ if(s.type==='passive') sp += skillLevel(s.id)*0.3; });
+  }
+  race().skills.forEach(s=>{ if(/step|feet/i.test(s.name) && s.type==='passive') sp += skillLevel(s.id)*0.2; });
+  return Math.max(1, sp); // uncapped ceiling so stacking mounts/flight/teleport/skills keeps mattering
+}
+function travelSpeed(){
+  // displayed speed stays on the 1-10 descriptive scale
+  return Math.max(1, Math.min(10, travelSpeedRaw()));
+}
+function travelLabel(){ return TRAVEL_LABELS[Math.round(travelSpeed())-1] || TRAVEL_LABELS[4]; }
+function encounterSeconds(){
+  // widened scaling: raw speed can run well past 10, so encounters keep getting faster for
+  // heavily-invested travel builds instead of flattening out at the old speed-10 cap.
+  const sp = Math.max(1, Math.min(22, travelSpeedRaw()));
+  return Math.round(Math.max(6, Math.min(95, 95 - (sp-1)*(89/21))));
+}
+function autocastSeconds(){
+  // base 1 per 10s. Fatigue <=20 speeds it up; fatigue >=21 slows it down.
+  if(state.fatigue >= 21){
+    return round2(10 + Math.min(2, (state.fatigue-20)*0.04));
+  }
+  return round2(10 - Math.min(2, (20-state.fatigue)*0.1));
+}
+
+/* =========================================================
+   ITEMS / LOOT
+   ========================================================= */
+const ITEM_ADJ = ['Weathered','Sturdy','Gleaming','Ornate','Runed','Ancient','Savage','Blessed','Cursed','Masterwork'];
+const ITEM_NOUNS = {
+  head:['Cap','Helm','Circlet','Hood'], neck:['Amulet','Chain','Pendant'], shoulders:['Pauldrons','Mantle','Spaulders'],
+  chest:['Tunic','Breastplate','Robe','Cuirass'], back:['Cloak','Cape'], hands:['Gloves','Gauntlets','Wraps'],
+  waist:['Belt','Sash','Girdle'], legs:['Leggings','Greaves','Trousers'], feet:['Boots','Sandals','Sabatons'],
+  mainhand:['Sword','Axe','Staff','Dagger','Mace','Bow'], offhand:['Shield','Tome','Orb','Buckler'],
+  trinket:['Ring','Charm','Talisman','Idol']
+};
+function rollRarity(luckStat){
+  // Luck increases rare item drop rate by nudging weight from common toward rarer tiers.
+  const luckBoost = Math.min(30, (luckStat||0)*0.15);
+  const weights = RARITY.map((r,i)=> i===0 ? Math.max(10, r.weight-luckBoost) : r.weight + luckBoost/(RARITY.length-1));
+  const total = weights.reduce((a,b)=>a+b,0);
+  let roll = Math.random()*total;
+  for(let i=0;i<RARITY.length;i++){ if(roll<weights[i]) return RARITY[i]; roll-=weights[i]; }
+  return RARITY[0];
+}
+function randAnyStat(){
+  // 70% a core stat, 30% a secondary/rating stat (life steal is rarer still)
+  if(Math.random() < 0.3){
+    if(Math.random() < 0.08) return 'lifeSteal';
+    const others = SECONDARY_KEYS.filter(k=>k!=='lifeSteal');
+    return others[Math.floor(Math.random()*others.length)];
+  }
+  return STAT_KEYS[Math.floor(Math.random()*STAT_KEYS.length)];
+}
+function generateItem(level, forcedRarity, luckStat){
+  const slot = EQUIP_SLOTS[Math.floor(Math.random()*EQUIP_SLOTS.length)];
+  const rarity = forcedRarity || rollRarity(luckStat);
+  const nounList = ITEM_NOUNS[slot.key];
+  const noun = nounList[Math.floor(Math.random()*nounList.length)];
+  const adj = ITEM_ADJ[Math.floor(Math.random()*ITEM_ADJ.length)];
+  const rIdx = RARITY.findIndex(r=>r.key===rarity.key);
+  const numStats = Math.min(4, 1+rIdx);
+  const stats = {};
+  const usedStats = new Set();
+  for(let i=0;i<numStats;i++){
+    let k = randAnyStat();
+    let tries=0; while(usedStats.has(k) && tries<8){ k=randAnyStat(); tries++; }
+    usedStats.add(k);
+    const isPct = isPercentStat(k);
+    const power = (1 + level*0.6) * rarity.mult * (0.6+Math.random()*0.8);
+    const raw = Math.max(isPct?0.2:1, isPct? power*0.35 : Math.round(power));
+    stats[k] = (stats[k]||0) + round2(raw);
+  }
+  const value = Math.round((5 + level*2) * rarity.mult);
+  return {
+    id: uid('it'), name:`${adj} ${noun}`, slot: slot.key, slotIcon: slot.icon,
+    rarity: rarity.key, stats, value, resistElement:null, resistAmt:0, level,
+    isShield: slot.key==='offhand' && noun==='Shield'
+  };
+}
+function generateEssence(elementKey){
+  const el = EL[elementKey];
+  return { id: uid('es'), name:`${el.name} Boss Essence`, slot:null, isEssence:true, element:elementKey, value: 40 };
+}
+function rarityDef(key){ return RARITY.find(r=>r.key===key); }
+
+/* =========================================================
+   LOG
+   ========================================================= */
+function log(msg, cls){
+  state.log.unshift({msg, cls: cls||'log-info', t: Date.now()});
+  if(state.log.length>80) state.log.length = 80;
+  renderBattleLog();
+}
+
+/* =========================================================
+   TITLES
+   ========================================================= */
+function grantTitle(id, name, statKey, amount){
+  if(state.unlockedTitles.find(t=>t.id===id)) return;
+  state.unlockedTitles.push({id,name,statKey,amount});
+  log(`🏅 New title unlocked: "${name}"`, 'log-lvl');
+  if(!state.activeTitleId) state.activeTitleId = id;
+}
+function checkTitleUnlocks(){
+  const tier = Math.floor((state.level-1)/5);
+  for(let t=0;t<=tier;t++){
+    const id = `lvl_${state.classId}_${t}`;
+    if(!state.unlockedTitles.find(x=>x.id===id)){
+      grantTitle(id, `${RANK_TITLES_20[Math.min(19,t)]} ${cls().name}`, cls().primary, 1+t);
+    }
+  }
+  REGIONS.forEach(r=>{
+    const p = state.regionProgress[r.id];
+    if(p && p.completed){
+      const id = `region_${r.id}`;
+      if(!state.unlockedTitles.find(x=>x.id===id)) grantTitle(id, `Conqueror of ${r.name}`, 'vit', 4);
+    }
+  });
+  if(state.reincarnations>0){
+    const id = 'reinc_1';
+    if(!state.unlockedTitles.find(x=>x.id===id)) grantTitle(id, `The Reborn`, 'faith', 6);
+  }
+}
+
+/* =========================================================
+   COMBAT
+   ========================================================= */
+function currentAttackPool(){
+  ensureSkillLevels();
+  const pool = [];
+  race().skills.forEach(s=>{ if(s.type==='power' && skillLevel(s.id)>0) pool.push(s); });
+  cls().skills.forEach(s=>{ if((s.type==='attack'||s.type==='spell') && skillLevel(s.id)>0) pool.push(s); });
+  return pool;
+}
+function activeCompanionSupportPool(){
+  const comp = activeCompanion();
+  if(!comp) return [];
+  return comp.skills.filter(s=>s.type==='support' && skillLevel(s.id)>0);
+}
+
+function pickMonster(){
+  const reg = region();
+  const m = reg.monsters[Math.floor(Math.random()*reg.monsters.length)];
+  const lvl = Math.max(1, state.level + Math.floor(Math.random()*3) - 1);
+  const hp = Math.round((18 + lvl*9) * (1 + reg.minLevel*0.03));
+  return { name:m.name, element:m.element, level:lvl, hp, maxHp:hp, atk: Math.round(4+lvl*2.1), isBoss:false };
+}
+function nextBossIndex(){
+  const p = state.regionProgress[region().id];
+  if(!p) return -1;
+  for(let i=0;i<3;i++) if(!p.bossesKilled[i]) return i;
+  return -1;
+}
+function pickBoss(idx){
+  const reg = region();
+  const b = reg.bosses[idx];
+  const lvl = state.level+2+idx;
+  const hp = Math.round((18+lvl*9) * b.hpMult * 0.4);
+  return { name:b.name, element:b.element, level:lvl, hp, maxHp:hp, atk: Math.round(6+lvl*2.6),
+    isBoss:true, essenceDropChance:b.essenceDropChance, rarityFloor:b.rarityFloor, bossIndex:idx, regionId:reg.id };
+}
+
+function playerDamageTo(){
+  const st = effectiveStats();
+  const pool = currentAttackPool();
+  let dmg, name, isSkillDamage;
+  if(pool.length===0){
+    dmg = Math.max(1, st.str*0.4);
+    name = 'Basic Strike'; isSkillDamage = false;
+  } else {
+    const sk = pool[Math.floor(Math.random()*pool.length)];
+    const lvl = skillLevel(sk.id);
+    const statVal = st[sk.scalingStat] || st.str;
+    dmg = (sk.base + statVal*0.9) * (1 + lvl*0.18);
+    name = sk.name; isSkillDamage = true;
+  }
+  dmg *= isSkillDamage ? (1+st.magicBonus/100) : (1+st.attackBonus/100);
+  dmg *= (1+st.damageBonus/100);
+  if(cls().isMelee) dmg *= (1+st.str*0.001);
+  const critChance = Math.min(0.75, st.criticalRating/100);
+  const crit = Math.random() < critChance;
+  if(crit) dmg *= 2;
+  dmg = Math.max(1, Math.round(dmg));
+  if(st.lifeSteal>0){
+    const heal = Math.round(dmg*(st.lifeSteal/100));
+    if(heal>0) state.hp = Math.min(maxHP(), state.hp+heal);
+  }
+  return {dmg, name, crit};
+}
+function companionAssistDamage(){
+  const pool = activeCompanionSupportPool();
+  if(pool.length===0 || Math.random()>0.35) return null;
+  const st = effectiveStats();
+  const sk = pool[Math.floor(Math.random()*pool.length)];
+  const lvl = skillLevel(sk.id);
+  const statVal = st[sk.scalingStat]||st.agi;
+  const dmg = Math.max(1, Math.round((sk.base + statVal*0.5)*(1+lvl*0.15)));
+  return {dmg, name: `${activeCompanion().name}'s ${sk.name}`};
+}
+function monsterDamageTo(monster){
+  const st = effectiveStats();
+  if(Math.random() < Math.min(0.6, st.evasion/100)) return {dmg:0, evaded:true};
+  const res = elementResistances();
+  let dmg = monster.atk + Math.floor(Math.random()*4);
+  const resistPct = Math.min(70, (res[monster.element]||0))/100;
+  dmg = dmg * (1-resistPct);
+  if(Math.random() < Math.min(0.7, st.armorRating/100)) dmg *= (1-Math.min(0.85, st.armorBonus/100));
+  const hasShield = state.equipment.offhand && state.equipment.offhand.isShield;
+  if(hasShield && Math.random() < Math.min(0.7, st.blockRating/100)) dmg *= 0.5;
+  dmg = Math.max(1, Math.round(dmg));
+  return {dmg, evaded:false};
+}
+
+function spawnEncounter(){
+  const reg = region();
+  const bossIdx = nextBossIndex();
+  const canBoss = bossIdx >= 0;
+  const isBossFight = canBoss && Math.random() < 0.08;
+  state.monster = isBossFight ? pickBoss(bossIdx) : pickMonster();
+  if(isBossFight) log(`⚠️ A region boss appears: ${state.monster.name} (Lv.${state.monster.level})`, 'log-boss');
+  else log(`A wild foe appears: ${state.monster.name} (Lv.${state.monster.level})`, 'log-info');
+}
+
+function grantXP(amount){
+  state.xp += Math.round(amount * xpMult());
+  while(state.xp >= xpToNext()){
+    state.xp -= xpToNext();
+    state.level++;
+    state.skillPoints++;
+    state.mp = maxMP(); state.hp = maxHP();
+    log(`✦ Level up! You are now level ${state.level}.`, 'log-lvl');
+  }
+  checkTitleUnlocks();
+}
+
+function maybeCompanionQuip(){
+  if(!activeCompanion()) return;
+  state.companionQuipTick = (state.companionQuipTick||0)+1;
+  if(state.companionQuipTick >= 1500){ // ~25 minutes at 1x speed
+    state.companionQuipTick = 0;
+    const q = COMPANION_QUIPS[Math.floor(Math.random()*COMPANION_QUIPS.length)];
+    log(`${activeCompanion().icon} ${activeCompanion().name}: ${q}`, 'log-quip');
+  }
+}
+
+function checkCompanionUnlock(regionId){
+  const comp = COMPANIONS.find(c=>c.regionId===regionId);
+  if(!comp) return;
+  if(state.unlockedCompanions.includes(comp.id)) return;
+  const kills = state.regionKills[regionId]||0;
+  if(kills >= comp.unlockKills){
+    state.unlockedCompanions.push(comp.id);
+    if(!state.activeCompanionId) state.activeCompanionId = comp.id;
+    log(`🐾 ${comp.name} has decided to travel with you! (Companions tab)`, 'log-lvl');
+  }
+}
+
+function killMonster(){
+  const m = state.monster;
+  if(m.isCow){
+    state.cowFinalBossDefeated = true;
+    state.totalKills++;
+    state.gold += 5000;
+    grantXP(50000);
+    state.mood = 100;
+    log('🐄✨ The Cow lets out one final, unbothered moo... and falls. The world trembles.', 'log-boss');
+    grantTitle('cow_slayer', 'Slayer of the Cow', 'luck', 10);
+    state.monster = null;
+    switchTab('cow');
+    return;
+  }
+  state.totalKills++;
+  state.regionKills[m.isBoss? m.regionId : state.regionId] = (state.regionKills[m.isBoss? m.regionId : state.regionId]||0)+1;
+  const goldGain = Math.round((3 + m.level*1.8) * (m.isBoss?4:1));
+  state.gold += goldGain;
+  grantXP(Math.round((8 + m.level*4) * (m.isBoss?3:1)));
+  log(`You defeat ${m.name}! +${goldGain}g`, 'log-info');
+
+  const st = effectiveStats();
+  const dropChance = m.isBoss ? 1 : 0.55;
+  if(Math.random() < dropChance){
+    const forced = m.isBoss ? RARITY[Math.min(RARITY.length-1, m.rarityFloor+Math.floor(Math.random()*2))] : null;
+    const item = generateItem(m.level, forced, st.luck);
+    handleLoot(item);
+  }
+  const comp = activeCompanion();
+  if(comp && Math.random() < 0.06){
+    const item = generateItem(m.level, null, st.luck);
+    log(`${comp.icon} ${comp.name} found something for you!`, 'log-loot');
+    handleLoot(item);
+  }
+  if(m.isBoss && Math.random() < m.essenceDropChance){
+    state.essences[m.element] = (state.essences[m.element]||0)+1;
+    log(`Boss drop! ${EL[m.element].name} Boss Essence obtained.`, 'log-loot');
+  }
+  if(m.isBoss){
+    state.mood = Math.min(100, state.mood+6);
+    const p = state.regionProgress[m.regionId];
+    if(p && !p.bossesKilled[m.bossIndex]){
+      p.bossesKilled[m.bossIndex] = true;
+      if(p.bossesKilled.every(Boolean) && !p.completed){
+        p.completed = true;
+        const reg = regionById(m.regionId);
+        log(`🏆 ${reg.name} is conquered! All three bosses have fallen.`, 'log-boss');
+        if(allRegionsCompleted()) log(`🐄 A rift to the Cow Dimension has opened... (see the Cow Dimension tab)`, 'log-boss');
+      }
+    }
+  }
+  checkCompanionUnlock(state.regionId);
+  checkTitleUnlocks();
+  state.stamina = Math.max(0, state.stamina - (m.isBoss?16:8));
+  state.fatigue = Math.min(100, state.fatigue + (m.isBoss?10:5));
+  const bagChance = m.isBoss ? 0.02 : 0.004;
+  if(Math.random() < bagChance){
+    state.bags += 1;
+    log(`✨ A rare Bag was found! Max carry capacity permanently increased.`, 'log-crit');
+  }
+  state.monster = null;
+  state.encounterTimer = encounterSeconds();
+}
+
+function handleLoot(item){
+  const rar = rarityDef(item.rarity);
+  if(state.autoSell[item.rarity]){
+    state.gold += item.value;
+    log(`Auto-sold ${item.name} (${rar.name}) for ${item.value}g`, 'log-loot');
+    return;
+  }
+  if(state.autoScrap[item.rarity]){
+    const rIdx = RARITY.findIndex(r=>r.key===item.rarity);
+    state.scrapDust += 1+rIdx;
+    log(`Auto-scrapped ${item.name} (${rar.name}) for ${1+rIdx} Scrap Dust`, 'log-loot');
+    return;
+  }
+  if(overCapacity()){
+    log(`Inventory full — ${item.name} was lost! (raise carry capacity)`, 'log-dmg');
+    return;
+  }
+  state.inventory.push(item);
+  log(`Loot: ${item.name} [${rar.name}]`, item.rarity==='mythic'||item.rarity==='legendary' ? 'log-crit' : 'log-loot');
+  if(item.rarity==='legendary'||item.rarity==='mythic'||item.rarity==='epic') state.mood = Math.min(100, state.mood+8);
+}
+
+function playerDefeated(){
+  state.deaths++;
+  const lost = Math.min(state.gold, Math.round(state.gold*0.08));
+  state.gold -= lost;
+  log(`You were defeated and stagger back to town, dropping ${lost}g...`, 'log-dmg');
+  state.hp = Math.max(1, Math.round(maxHP()*0.4));
+  state.monster = null;
+  state.encounterTimer = encounterSeconds()+10;
+}
+
+/* main tick: called once per simulated second */
+function tick(){
+  if(state.paused || state.atTavern) return;
+  ensureSkillLevels();
+  state.dayTick++;
+  const dayLen = 240;
+  const dayPos = state.dayTick % dayLen;
+  const phases = ['Dawn','Morning','Midday','Afternoon','Dusk','Night'];
+  state.timeOfDay = phases[Math.floor(dayPos/(dayLen/phases.length))];
+  const seasons = ['Spring','Summer','Autumn','Winter'];
+  state.season = seasons[Math.floor(state.dayTick/(dayLen*12)) % 4];
+
+  if(state.dayTick % 6 === 0){
+    state.thirst = Math.max(0, state.thirst-1);
+    state.hunger = Math.max(0, state.hunger-1);
+    state.mood = Math.max(0, state.mood-0.4);
+    state.fatigue = Math.max(0, state.fatigue-0.6);
+  }
+  state.hp = Math.min(state.hp, maxHP());
+  state.mp = Math.min(state.mp, maxMP());
+  if(state.hp<=0) state.hp = 1;
+
+  if(state.stamina <= 0) return; // must rest at inn
+
+  if(!state.monster){
+    state.encounterTimer -= 1;
+    if(state.encounterTimer <= 0){
+      spawnEncounter();
+      state.autocastTimer = autocastSeconds();
+    }
+    return;
+  }
+
+  state.autocastTimer -= 1;
+  if(state.autocastTimer <= 0){
+    const atk = playerDamageTo();
+    state.monster.hp -= atk.dmg;
+    log(`${atk.crit?'CRIT! ':''}You use ${atk.name} for ${atk.dmg} dmg`, atk.crit?'log-crit':'log-dmg');
+    const assist = companionAssistDamage();
+    if(assist && state.monster){
+      state.monster.hp -= assist.dmg;
+      log(`${assist.name} for ${assist.dmg} dmg`, 'log-dmg');
+    }
+    if(state.monster && state.monster.hp <= 0){
+      killMonster();
+      maybeCompanionQuip();
+      return;
+    }
+    const hit = monsterDamageTo(state.monster);
+    if(hit.evaded){
+      log(`You evade ${state.monster.name}'s attack!`, 'log-info');
+    } else {
+      state.hp -= hit.dmg;
+      log(`${state.monster.name} hits you for ${hit.dmg} dmg`, 'log-dmg');
+    }
+    state.autocastTimer = autocastSeconds();
+    if(state.hp <= 0) playerDefeated();
+    maybeCompanionQuip();
+  }
+}
+
+function gameLoop(){
+  if(!state) return;
+  for(let i=0;i<gameSpeed;i++) tick();
+  renderHUD();
+  renderCombatPanel();
+}
+
+/* =========================================================
+   SAVE / LOAD
+   Saves are stored locally in the player's own browser (localStorage)
+   whenever that's available (e.g. the file downloaded and opened directly,
+   or hosted elsewhere). Some sandboxed preview environments block
+   localStorage entirely, so we fall back to Anthropic's artifact storage
+   API there, and to in-memory-only as a last resort.
+   ========================================================= */
+const LOCAL_SAVE_KEY = 'vibequestidle_save_v1';
+let _localStorageOK = null;
+function localStorageAvailable(){
+  if(_localStorageOK !== null) return _localStorageOK;
+  try{
+    const t = '__vqi_probe__';
+    window.localStorage.setItem(t, '1');
+    window.localStorage.removeItem(t);
+    _localStorageOK = true;
+  }catch(e){ _localStorageOK = false; }
+  return _localStorageOK;
+}
+function cloudStorageAvailable(){ return typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function'; }
+
+async function saveGame(){
+  if(!state) return;
+  const json = JSON.stringify(state);
+  if(localStorageAvailable()){
+    try{ window.localStorage.setItem(LOCAL_SAVE_KEY, json); return; }
+    catch(e){ console.error('local save failed', e); }
+  }
+  if(cloudStorageAvailable()){
+    try{ await window.storage.set('vibequestidle_save', json, false); }
+    catch(e){ console.error('save failed', e); }
+  }
+}
+async function loadGame(){
+  if(localStorageAvailable()){
+    try{
+      const raw = window.localStorage.getItem(LOCAL_SAVE_KEY);
+      if(raw){ state = JSON.parse(raw); return true; }
+    }catch(e){ /* fall through */ }
+  }
+  if(cloudStorageAvailable()){
+    try{
+      const res = await window.storage.get('vibequestidle_save', false);
+      if(res && res.value){ state = JSON.parse(res.value); return true; }
+    }catch(e){ /* no save yet */ }
+  }
+  return false;
+}
+function scheduleAutosave(){
+  if(saveTimer) clearInterval(saveTimer);
+  saveTimer = setInterval(saveGame, 600000); // autosaves every 10 minutes
+}
+
+async function resetGame(){
+  const sure = window.confirm('Reset Game? This will permanently erase your character and all saved progress. This cannot be undone.');
+  if(!sure) return;
+  if(localStorageAvailable()){
+    try{ window.localStorage.removeItem(LOCAL_SAVE_KEY); }catch(e){ /* ignore */ }
+  }
+  if(cloudStorageAvailable()){
+    try{ await window.storage.delete('vibequestidle_save', false); }catch(e){ /* nothing to delete */ }
+  }
+  if(gameLoopTimer){ clearInterval(gameLoopTimer); gameLoopTimer = null; }
+  if(saveTimer){ clearInterval(saveTimer); saveTimer = null; }
+  if(moo && moo.timerId){ clearInterval(moo.timerId); }
+  moo = null; bj = null; pendingReincarnate = null;
+  state = null;
+  gameSpeed = 1;
+  selRace = null; selClass = null;
+  document.getElementById('app').classList.remove('ready');
+  document.getElementById('heroName').value = '';
+  document.getElementById('charCreate').style.display = 'block';
+  renderCharCreate();
+}
+
+/* =========================================================
+
+   CHARACTER CREATION
+   ========================================================= */
+let selRace = null, selClass = null;
+
+function renderCharCreate(){
+  const raceWrap = document.getElementById('raceChoices');
+  raceWrap.innerHTML = RACES.map(r=>`
+    <div class="choice-card" data-race="${r.id}">
+      <div class="choice-icon">${r.icon}</div>
+      <div class="choice-name">${r.name}</div>
+      <div class="choice-desc">${r.desc}<br><br>+${STAT_LABEL[r.primary]}, +${STAT_LABEL[r.secondary]}<br>Resist: ${EL[r.resist].icon} ${EL[r.resist].name}${r.hasMount?' · 🐴 Mount':''}${r.canFly?' · 🦋 Flight':''}</div>
+    </div>`).join('');
+  const classWrap = document.getElementById('classChoices');
+  classWrap.innerHTML = CLASSES.map(c=>`
+    <div class="choice-card" data-class="${c.id}">
+      <div class="choice-icon">${c.icon}</div>
+      <div class="choice-name">${c.name}</div>
+      <div class="choice-desc">${c.desc}<br><br>+${STAT_LABEL[c.primary]}, +${STAT_LABEL[c.secondary]}<br>Travel: ${TRAVEL_LABELS[c.travelSpeed-1]}${c.hasMount?' 🐴':''}${c.hasTravelSkill?' 💨':''}${c.canTeleport?' 🌀':''}</div>
+    </div>`).join('');
+
+  raceWrap.querySelectorAll('.choice-card').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      raceWrap.querySelectorAll('.choice-card').forEach(x=>x.classList.remove('selected'));
+      el.classList.add('selected'); selRace = el.dataset.race; updateCCSummary();
+    });
+  });
+  classWrap.querySelectorAll('.choice-card').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      classWrap.querySelectorAll('.choice-card').forEach(x=>x.classList.remove('selected'));
+      el.classList.add('selected'); selClass = el.dataset.class; updateCCSummary();
+    });
+  });
+
+  const banner = document.getElementById('reincarnateBanner');
+  const tagline = document.getElementById('ccTagline');
+  if(pendingReincarnate){
+    banner.style.display = 'block';
+    banner.innerHTML = `✨ Reincarnation ${pendingReincarnate.count}: your new character will begin with a permanent echo of your last life's power.`;
+    tagline.textContent = 'the cycle begins anew';
+  } else {
+    banner.style.display = 'none';
+    tagline.textContent = 'a high fantasy pixel idle rpg';
+  }
+}
+function updateCCSummary(){
+  const summary = document.getElementById('ccSummary');
+  const beginBtn = document.getElementById('beginBtn');
+  if(selRace && selClass){
+    const r = RACES.find(x=>x.id===selRace), c = CLASSES.find(x=>x.id===selClass);
+    summary.innerHTML = `You will begin as a <b style="color:var(--gold)">${r.name} ${c.name}</b>, starting in the ${EL[r.resist].icon} ${regionById(r.resist).name}. Race and class cannot be changed later.`;
+    beginBtn.disabled = false;
+  } else {
+    summary.textContent = 'Choose one race and one class to continue.';
+    beginBtn.disabled = true;
+  }
+}
+
+document.getElementById('beginBtn').addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('heroName').value.trim();
+  state = freshState(selRace, selClass, nameInput || (RACES.find(r=>r.id===selRace).name+' '+CLASSES.find(c=>c.id===selClass).name));
+  if(pendingReincarnate){
+    state.permStatBonus = pendingReincarnate.bonus;
+    state.reincarnations = pendingReincarnate.count;
+    pendingReincarnate = null;
+  }
+  ensureSkillLevels();
+  state.hp = maxHP(); state.mp = maxMP();
+  state.encounterTimer = encounterSeconds();
+  state.autocastTimer = autocastSeconds();
+  log(`Welcome, ${state.name}! Your journey through VibeQuestIdle begins.`, 'log-lvl');
+  checkTitleUnlocks();
+  document.getElementById('charCreate').style.display = 'none';
+  startApp();
+  await saveGame();
+});
+
+/* =========================================================
+   APP SHELL / TABS
+   ========================================================= */
+const TABS = [
+  {id:'adventure', label:'Adventure', icon:'🗺️'},
+  {id:'character', label:'Character', icon:'🧝'},
+  {id:'skills', label:'Skills', icon:'📖'},
+  {id:'inventory', label:'Inventory', icon:'🎒'},
+  {id:'forge', label:'Forge', icon:'🔨'},
+  {id:'factions', label:'Factions', icon:'🏳️'},
+  {id:'deities', label:'Deities', icon:'🛐'},
+  {id:'cultures', label:'Cultures', icon:'🏺'},
+  {id:'companions', label:'Companions', icon:'🐾'},
+  {id:'town', label:'Town', icon:'🏘️'},
+  {id:'cow', label:'Cow Dimension', icon:'🐄'},
+];
+let activeTab = 'adventure';
+
+function tabIsUnlocked(t){
+  if(t.id==='cow') return allRegionsCompleted();
+  return true;
+}
+function buildShell(){
+  const rail = document.getElementById('tabrail');
+  rail.innerHTML = TABS.map(t=>`<button class="tab-btn${t.id===activeTab?' active':''}" data-tab="${t.id}" style="${tabIsUnlocked(t)?'':'display:none;'}">
+    <span class="tab-icon">${t.icon}</span><span class="label">${t.label}</span></button>`).join('');
+  rail.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click', ()=>switchTab(b.dataset.tab)));
+  const content = document.getElementById('content');
+  content.innerHTML = TABS.map(t=>`<div class="panel" id="panel-${t.id}"></div>`).join('');
+  if(!tabIsUnlocked(TABS.find(t=>t.id===activeTab))) activeTab = 'adventure';
+  switchTab(activeTab);
+}
+function syncTabRailVisibility(){
+  const btn = document.querySelector('.tab-btn[data-tab="cow"]');
+  if(!btn) return;
+  const unlocked = allRegionsCompleted();
+  btn.style.display = unlocked ? '' : 'none';
+  if(!unlocked && activeTab==='cow') switchTab('adventure');
+}
+function switchTab(id){
+  const tabDef = TABS.find(t=>t.id===id);
+  if(tabDef && !tabIsUnlocked(tabDef)) id = 'adventure';
+  activeTab = id;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+id));
+  renderActivePanel();
+}
+function renderActivePanel(){
+  switch(activeTab){
+    case 'adventure': renderAdventurePanel(); break;
+    case 'character': renderCharacterPanel(); break;
+    case 'skills': renderSkillsPanel(); break;
+    case 'inventory': renderInventoryPanel(); break;
+    case 'forge': renderForgePanel(); break;
+    case 'factions': renderFactionsPanel(); break;
+    case 'deities': renderDeitiesPanel(); break;
+    case 'cultures': renderCulturesPanel(); break;
+    case 'companions': renderCompanionsPanel(); break;
+    case 'town': renderTownPanel(); break;
+    case 'cow': renderCowPanel(); break;
+  }
+}
+let gameLoopTimer = null;
+function startApp(){
+  document.getElementById('app').classList.add('ready');
+  buildShell();
+  renderHUD();
+  scheduleAutosave();
+  if(gameLoopTimer) clearInterval(gameLoopTimer);
+  gameLoopTimer = setInterval(gameLoop, 1000);
+}
+
+/* =========================================================
+   HUD
+   ========================================================= */
+function pct(a,b){ return Math.max(0,Math.min(100, (a/b)*100 )); }
+function renderHUD(){
+  if(!state) return;
+  const hud = document.getElementById('hud');
+  const mh = maxHP(), mm = maxMP();
+  hud.innerHTML = `
+    <div class="brand">VibeQuestIdle</div>
+    <div class="hud-group">
+      <div class="bar-wrap"><div class="bar-label"><span>❤ HP</span><span>${state.hp}/${mh}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-hp" style="width:${pct(state.hp,mh)}%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-label"><span>✦ MP</span><span>${state.mp}/${mm}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-mp" style="width:${pct(state.mp,mm)}%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-label"><span>★ XP</span><span>Lv ${state.level}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-xp" style="width:${pct(state.xp,xpToNext())}%"></div></div></div>
+    </div>
+    <div class="hud-group">
+      <div class="bar-wrap"><div class="bar-label"><span>⚡ Stamina</span><span>${Math.round(state.stamina)}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-stam" style="width:${pct(state.stamina,100)}%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-label"><span>💧 Thirst</span><span>${Math.round(state.thirst)}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-thirst" style="width:${pct(state.thirst,100)}%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-label"><span>🍖 Hunger</span><span>${Math.round(state.hunger)}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-hunger" style="width:${pct(state.hunger,100)}%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-label"><span>🙂 Mood</span><span>${Math.round(state.mood)}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-mood" style="width:${pct(state.mood,100)}%"></div></div></div>
+      <div class="bar-wrap"><div class="bar-label"><span>😮‍💨 Fatigue</span><span>${Math.round(state.fatigue)}</span></div>
+        <div class="bar-track"><div class="bar-fill fill-fatigue" style="width:${pct(state.fatigue,100)}%"></div></div></div>
+    </div>
+    <div class="hud-group">
+      <span class="hud-chip">${state.timeOfDay} · ${state.season}</span>
+      <span class="hud-chip">🎒 <b>${carriedCount()}/${carryCapacity()}</b></span>
+      <span class="hud-chip">🏃 <b>${travelLabel()}</b></span>
+      <span class="hud-chip" id="goldChip">💰 <b>${state.gold}</b>g</span>
+      <button class="small" id="saveNowBtn">Save</button>
+    </div>
+  `;
+  const sb = document.getElementById('saveNowBtn');
+  if(sb) sb.addEventListener('click', async ()=>{ await saveGame(); sb.textContent='Saved!'; setTimeout(()=>sb.textContent='Save',1200); });
+  syncTabRailVisibility();
+}
+function renderBattleLog(){
+  const el = document.getElementById('battleLog');
+  if(!el) return;
+  el.innerHTML = state.log.slice(0,60).map(l=>`<div class="${l.cls}">${l.msg}</div>`).join('');
+}
+
+/* =========================================================
+   ADVENTURE PANEL (+ Tavern / Blackjack minigame)
+   ========================================================= */
+function renderAdventurePanel(){
+  const p = document.getElementById('panel-adventure');
+  if(state.atTavern){ renderTavern(p); return; }
+  const reg = region();
+  const res = elementResistances();
+  const reqResist = regionRequiredResist(reg);
+  const meetsResist = res[reg.element] >= reqResist;
+  const prog = state.regionProgress[reg.id];
+  p.innerHTML = `
+    <h2 class="section-title">Adventure</h2>
+    ${state.stamina<=0 ? `<div class="banner warn">You are exhausted. Visit the <b>Town</b> tab and rest at the inn to recover stamina.</div>` : ''}
+    ${!meetsResist ? `<div class="banner warn">Your ${EL[reg.element].name} resistance (${res[reg.element]}) is below this region's requirement (${reqResist}). You'll take extra damage — raise culture reputation or enchant gear.</div>` : ''}
+    <div class="toolbar">
+      <label style="font-size:15px;color:var(--muted);">Region:</label>
+      <select id="regionSelect"></select>
+      <span class="hud-chip">Encounter in: <b>${state.monster? '—' : state.encounterTimer+'s'}</b></span>
+      <span class="hud-chip">Autocast: <b>${autocastSeconds()}s</b></span>
+      <label class="chk">Speed
+        <select id="speedSelect"><option value="1">1x</option><option value="3">3x</option><option value="10">10x</option></select>
+      </label>
+    </div>
+    <div class="card">
+      <div class="sub-title" style="margin-top:0;">${reg.name} ${EL[reg.element].icon} ${prog.completed?'<span style="color:var(--c-legendary)">— CONQUERED</span>':''}</div>
+      <div style="color:var(--muted);font-size:15px;margin-bottom:8px;">${reg.desc}</div>
+      <div style="font-size:14px;color:var(--muted);">Requires ${EL[reg.element].name} resistance ≥ ${reqResist} · Suggested level ${reg.minLevel}+</div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        ${prog.bossesKilled.map((k,i)=>`<span class="hud-chip" style="${k?'border-color:var(--c-legendary);color:var(--c-legendary);':''}">Boss ${i+1}: ${k?'Defeated ✓':'Alive'}</span>`).join('')}
+      </div>
+    </div>
+    <div id="monsterArea"></div>
+    <div class="sub-title">Battle Log</div>
+    <div id="battleLog"></div>
+  `;
+  const sel = document.getElementById('regionSelect');
+  sel.innerHTML = REGIONS.map(r=>`<option value="${r.id}" ${r.id===state.regionId?'selected':''}>${EL[r.element].icon} ${r.name}${state.regionProgress[r.id].completed?' ✓':''}</option>`).join('');
+  sel.addEventListener('change', ()=>{ state.regionId = sel.value; state.monster=null; state.encounterTimer = encounterSeconds(); renderAdventurePanel(); });
+  document.getElementById('speedSelect').value = String(gameSpeed);
+  document.getElementById('speedSelect').addEventListener('change', e=>{ gameSpeed = parseInt(e.target.value,10); });
+  renderCombatPanel();
+  renderBattleLog();
+}
+function renderCombatPanel(){
+  const area = document.getElementById('monsterArea');
+  if(!area) return;
+  if(!state.monster){
+    area.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);">Scouting for the next encounter… (${state.encounterTimer}s)</div>`;
+    return;
+  }
+  const m = state.monster;
+  area.innerHTML = `
+    <div class="monster-badge">
+      <div class="monster-icon">${m.isBoss?'👑':'👹'}</div>
+      <div style="flex:1;">
+        <div style="font-family:var(--font-head);font-size:13px;color:${m.isBoss?'var(--c-legendary)':'var(--parchment)'};">${m.name} ${m.isBoss?'(BOSS)':''}</div>
+        <div style="font-size:14px;color:var(--muted);margin:4px 0;">Lv.${m.level} · ${EL[m.element].icon} ${EL[m.element].name}</div>
+        <div class="progress-outer"><div class="progress-inner" style="width:${pct(m.hp,m.maxHp)}%;background:linear-gradient(90deg,#a83c34,var(--hp));"></div></div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${Math.max(0,m.hp)}/${m.maxHp} HP</div>
+      </div>
+    </div>`;
+}
+
+/* ---- Tavern & Blackjack minigame ---- */
+let bj = null; // transient blackjack table state (not saved)
+function freshDeck(){
+  const suits=['♠','♥','♦','♣']; const ranks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  const deck=[]; suits.forEach(s=>ranks.forEach(r=>deck.push({r,s})));
+  for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+  return deck;
+}
+function cardValue(c){ if(c.r==='A') return 11; if(['J','Q','K'].includes(c.r)) return 10; return parseInt(c.r,10); }
+function handValue(hand){
+  let total = hand.reduce((s,c)=>s+cardValue(c),0);
+  let aces = hand.filter(c=>c.r==='A').length;
+  while(total>21 && aces>0){ total-=10; aces--; }
+  return total;
+}
+function bjNewRound(bet){
+  if(bet>state.gold || bet<=0) return;
+  bj.bet = bet; state.gold -= bet;
+  bj.deck = freshDeck();
+  bj.player = [bj.deck.pop(), bj.deck.pop()];
+  bj.dealer = [bj.deck.pop(), bj.deck.pop()];
+  bj.done = false; bj.message = '';
+  renderTavern(document.getElementById('panel-adventure'));
+}
+function bjHit(){
+  if(bj.done) return;
+  bj.player.push(bj.deck.pop());
+  if(handValue(bj.player) > 21){ bj.done=true; bj.message='Bust! You lose the bet.'; }
+  renderTavern(document.getElementById('panel-adventure'));
+}
+function bjStand(){
+  if(bj.done) return;
+  while(handValue(bj.dealer) < 17) bj.dealer.push(bj.deck.pop());
+  const p = handValue(bj.player), d = handValue(bj.dealer);
+  bj.done = true;
+  if(d>21 || p>d){ state.gold += bj.bet*2; bj.message = `You win ${bj.bet}g!`; state.mood=Math.min(100,state.mood+3); }
+  else if(p===d){ state.gold += bj.bet; bj.message = 'Push — bet returned.'; }
+  else { bj.message = 'Dealer wins.'; }
+  renderHUD();
+  renderTavern(document.getElementById('panel-adventure'));
+}
+function cardHtml(c, hidden){
+  if(hidden) return `<span class="playing-card card-back"></span>`;
+  const red = c.s==='♥'||c.s==='♦';
+  return `<span class="playing-card ${red?'red':''}">${c.r}<br>${c.s}</span>`;
+}
+function renderTavern(p){
+  if(!bj) bj = {deck:[], player:[], dealer:[], bet:0, done:true, message:''};
+  const inRound = bj.player.length>0 && !bj.done;
+  const showDealerHidden = inRound;
+  p.innerHTML = `
+    <h2 class="section-title">🍺 The Tavern</h2>
+    <div class="banner info">Auto-battle is paused while you're at the tavern. Rest your feet and try your luck at blackjack.</div>
+    <div class="card">
+      <div class="sub-title" style="margin-top:0;">Blackjack</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:6px;">Dealer stands on 17. Blackjack pays even money here in the tavern's house rules.</div>
+      <div><b>Dealer</b> ${bj.done? `(${handValue(bj.dealer)})`:''}: ${bj.dealer.length? bj.dealer.map((c,i)=>cardHtml(c, showDealerHidden && i===1)).join('') : '<span style="color:var(--muted)">—</span>'}</div>
+      <div style="margin-top:8px;"><b>You</b> ${bj.player.length? `(${handValue(bj.player)})`:''}: ${bj.player.length? bj.player.map(c=>cardHtml(c)).join('') : '<span style="color:var(--muted)">—</span>'}</div>
+      ${bj.message? `<div class="banner ${bj.message.includes('win')?'gold':'warn'}" style="margin-top:10px;">${bj.message}</div>` : ''}
+      <div class="toolbar" style="margin-top:10px;">
+        ${(!bj.player.length || bj.done) ? `
+          <input id="bjBet" type="number" min="1" max="${state.gold}" value="${Math.min(20,state.gold)}" style="width:90px;font-family:var(--font-body);font-size:16px;background:#1a1026;color:var(--parchment);border:2px solid var(--border);padding:6px;">
+          <button class="primary" id="bjDealBtn" ${state.gold<=0?'disabled':''}>Deal (bet gold)</button>
+        ` : `
+          <button id="bjHitBtn">Hit</button>
+          <button id="bjStandBtn">Stand</button>
+        `}
+      </div>
+    </div>
+    <button class="primary" id="leaveTavernBtn">🗺️ Return to Adventure</button>
+  `;
+  const dealBtn = document.getElementById('bjDealBtn');
+  if(dealBtn) dealBtn.addEventListener('click', ()=>{ const bet = parseInt(document.getElementById('bjBet').value,10)||0; bjNewRound(bet); });
+  const hitBtn = document.getElementById('bjHitBtn'); if(hitBtn) hitBtn.addEventListener('click', bjHit);
+  const standBtn = document.getElementById('bjStandBtn'); if(standBtn) standBtn.addEventListener('click', bjStand);
+  document.getElementById('leaveTavernBtn').addEventListener('click', ()=>{
+    state.atTavern = false; state.encounterTimer = encounterSeconds(); renderAdventurePanel();
+  });
+}
+
+/* =========================================================
+   CHARACTER PANEL
+   ========================================================= */
+function fmtStat(k,v){ const r = round2(v); return isPercentStat(k) ? `${r}%` : `${r}`; }
+function renderCharacterPanel(){
+  const p = document.getElementById('panel-character');
+  const st = effectiveStats();
+  const res = elementResistances();
+  p.innerHTML = `
+    <h2 class="section-title">Character</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="sub-title" style="margin-top:0;">${race().icon} ${state.name}</div>
+        <div class="stat-row"><span>Title</span><b id="titleDisplay">—</b></div>
+        <div class="stat-row"><span>Race / Class</span><b>${race().name} ${cls().name}</b></div>
+        <div class="stat-row"><span>Level</span><b>${state.level}</b></div>
+        <div class="stat-row"><span>XP</span><b>${state.xp} / ${xpToNext()}</b></div>
+        <div class="stat-row"><span>Gold</span><b>${state.gold}</b></div>
+        <div class="stat-row"><span>Kills</span><b>${state.totalKills}</b></div>
+        <div class="stat-row"><span>Deaths</span><b>${state.deaths}</b></div>
+        <div class="stat-row"><span>Travel speed</span><b>${travelLabel()} (${travelSpeed().toFixed(2)}/10)</b></div>
+        <div class="stat-row"><span>Mount</span><b>${state.hasMount?'Owned 🐴':'None'}</b></div>
+        <div class="stat-row"><span>Reincarnations</span><b>${state.reincarnations}</b></div>
+        <div class="sub-title">Title</div>
+        <select id="titleSelect"></select>
+      </div>
+      <div class="card">
+        <div class="sub-title" style="margin-top:0;">Core Stats</div>
+        ${STAT_KEYS.map(k=>`<div class="stat-row" title="${STAT_TOOLTIP[k]}"><span>${STAT_LABEL[k]}</span><b>${fmtStat(k,st[k])}</b></div>`).join('')}
+        <div class="sub-title">Combat Ratings</div>
+        ${SECONDARY_KEYS.map(k=>`<div class="stat-row" title="${STAT_TOOLTIP[k]}"><span>${STAT_LABEL[k]}</span><b>${fmtStat(k,st[k])}</b></div>`).join('')}
+      </div>
+    </div>
+    <div class="sub-title">Elemental Resistances</div>
+    <div class="grid grid-4">
+      ${ELEMENTS.map(e=>`<div class="card" style="padding:8px 10px;text-align:center;">
+        <div style="font-size:20px;">${e.icon}</div><div style="font-size:13px;color:var(--muted);">${e.name}</div>
+        <div style="font-family:var(--font-head);font-size:13px;color:${e.color};">${round2(res[e.key]||0)}</div>
+      </div>`).join('')}
+    </div>
+    <div class="sub-title">Affiliations</div>
+    <div class="grid grid-3">
+      <div class="card"><div class="stat-row"><span>Faction</span><b>${state.faction? FACTIONS.find(f=>f.id===state.faction).name : 'None'}</b></div></div>
+      <div class="card"><div class="stat-row"><span>Deity</span><b>${state.deity? DEITIES.find(d=>d.id===state.deity).name : 'None'}</b></div></div>
+      <div class="card"><div class="stat-row"><span>Bags found</span><b>${state.bags}</b></div></div>
+    </div>
+  `;
+  const titleSel = document.getElementById('titleSelect');
+  if(state.unlockedTitles.length===0){
+    titleSel.innerHTML = `<option>No titles unlocked yet</option>`;
+    titleSel.disabled = true;
+  } else {
+    titleSel.disabled = false;
+    titleSel.innerHTML = state.unlockedTitles.map(t=>`<option value="${t.id}" ${t.id===state.activeTitleId?'selected':''}>${t.name} (+${t.amount} ${STAT_LABEL[t.statKey]})</option>`).join('');
+    titleSel.addEventListener('change', ()=>{ state.activeTitleId = titleSel.value; renderCharacterPanel(); renderHUD(); });
+  }
+  const activeT = state.unlockedTitles.find(t=>t.id===state.activeTitleId);
+  document.getElementById('titleDisplay').textContent = activeT ? activeT.name : 'Unnamed Wanderer';
+}
+
+/* =========================================================
+   SKILLS PANEL
+   ========================================================= */
+function renderSkillTree(container, owner){
+  container.innerHTML = owner.skills.map(sk=>{
+    const lvl = skillLevel(sk.id);
+    const canLevel = lvl < sk.maxLevel && state.skillPoints > 0;
+    const dots = Array.from({length:sk.maxLevel}, (_,i)=>`<span class="dot ${i<lvl?'lit':''}"></span>`).join('');
+    let typeLabel = sk.type==='stat' ? `+${STAT_LABEL[sk.statKey]}` : (sk.type[0].toUpperCase()+sk.type.slice(1));
+    return `<div class="skill-card">
+      <div class="skill-head"><span class="skill-name">${sk.name}</span><span class="skill-lvl">Lv ${lvl}/${sk.maxLevel}</span></div>
+      <div class="skill-desc">${sk.desc} <span style="color:var(--gold-dim)">[${typeLabel}]</span></div>
+      <div class="skill-dots">${dots}</div>
+      <button data-skill="${sk.id}" ${canLevel?'':'disabled'}>Level Up (1 pt)</button>
+    </div>`;
+  }).join('');
+  container.querySelectorAll('button[data-skill]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id = b.dataset.skill;
+      if(state.skillPoints<=0) return;
+      const cur = skillLevel(id);
+      const allS = [...race().skills, ...cls().skills, ...COMPANIONS.flatMap(c=>c.skills)];
+      const sk = allS.find(s=>s.id===id);
+      if(!sk || cur>=sk.maxLevel) return;
+      setSkillLevel(id, cur+1);
+      state.skillPoints--;
+      renderActivePanel();
+      renderHUD();
+    });
+  });
+}
+function renderSkillsPanel(){
+  const p = document.getElementById('panel-skills');
+  p.innerHTML = `
+    <h2 class="section-title">Skills</h2>
+    <div class="banner info">Skill points available: <b>${state.skillPoints}</b> — earned 1 per level. Class skills and racial powers autocast automatically in combat once leveled to 1.</div>
+    <div class="sub-title" style="margin-top:0;">${cls().icon} ${cls().name} Skill Tree</div>
+    <div class="grid grid-3" id="classTree"></div>
+    <div class="sub-title">${race().icon} ${race().name} Racial Powers</div>
+    <div class="grid grid-3" id="raceTree"></div>
+  `;
+  renderSkillTree(document.getElementById('classTree'), cls());
+  renderSkillTree(document.getElementById('raceTree'), race());
+}
+
+/* =========================================================
+   INVENTORY PANEL
+   ========================================================= */
+function itemStatsStr(it){
+  if(it.isEssence) return `Forge material · tied to ${EL[it.element].name}`;
+  const parts = Object.entries(it.stats||{}).map(([k,v])=>`+${round2(v)}${isPercentStat(k)?'%':''} ${STAT_LABEL[k]}`);
+  if(it.resistElement) parts.push(`+${it.resistAmt} ${EL[it.resistElement].name} resist`);
+  if(it.isShield) parts.push('Shield (enables Block)');
+  return parts.join(', ');
+}
+function equipItem(itemId){
+  const idx = state.inventory.findIndex(i=>i.id===itemId);
+  if(idx<0) return;
+  const item = state.inventory[idx];
+  if(!item.slot) return;
+  const prev = state.equipment[item.slot];
+  state.equipment[item.slot] = item;
+  state.inventory.splice(idx,1);
+  if(prev) state.inventory.push(prev);
+  log(`Equipped ${item.name}.`, 'log-info');
+  renderInventoryPanel(); renderHUD();
+}
+function unequipItem(slotKey){
+  const item = state.equipment[slotKey];
+  if(!item) return;
+  // equipped items already count toward carry capacity, so moving one back to the
+  // pack doesn't change the total carried — no capacity check needed here.
+  state.equipment[slotKey] = null;
+  state.inventory.push(item);
+  renderInventoryPanel(); renderHUD();
+}
+function sellItem(itemId){
+  const idx = state.inventory.findIndex(i=>i.id===itemId);
+  if(idx<0) return;
+  const item = state.inventory[idx];
+  state.gold += item.value;
+  state.inventory.splice(idx,1);
+  log(`Sold ${item.name} for ${item.value}g.`, 'log-info');
+  renderInventoryPanel(); renderHUD();
+}
+function scrapItem(itemId){
+  const idx = state.inventory.findIndex(i=>i.id===itemId);
+  if(idx<0) return;
+  const item = state.inventory[idx];
+  const rIdx = RARITY.findIndex(r=>r.key===item.rarity);
+  const dust = 1 + rIdx;
+  state.scrapDust += dust;
+  state.inventory.splice(idx,1);
+  log(`Scrapped ${item.name} for ${dust} Scrap Dust.`, 'log-info');
+  renderInventoryPanel();
+}
+function renderInventoryPanel(){
+  const p = document.getElementById('panel-inventory');
+  p.innerHTML = `
+    <h2 class="section-title">Inventory</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="sub-title" style="margin-top:0;">Paper Doll</div>
+        <div id="paperdoll"></div>
+      </div>
+      <div class="card">
+        <div class="sub-title" style="margin-top:0;">Carry Capacity</div>
+        <div class="progress-outer"><div class="progress-inner" style="width:${pct(carriedCount(),carryCapacity())}%"></div></div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;">${carriedCount()} / ${carryCapacity()} slots (equipped gear counts too; raised by Strength) ${overCapacity()?'<span style="color:var(--hp)">— OVER CAPACITY (stat penalty)</span>':''}</div>
+        <div class="sub-title">Auto-sell by rarity</div>
+        <div id="autoSellRow" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+        <div class="sub-title">Auto-scrap by rarity</div>
+        <div id="autoScrapRow" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+        <div style="font-size:13px;color:var(--muted);margin-top:8px;">Scrap Dust: <b style="color:var(--gold)">${state.scrapDust}</b> · Boss Essences: <b style="color:var(--gold)">${Object.values(state.essences).reduce((a,b)=>a+b,0)}</b></div>
+      </div>
+    </div>
+    <div class="sub-title">Unequipped Items (${state.inventory.length})</div>
+    <div id="itemList"></div>
+  `;
+  const doll = document.getElementById('paperdoll');
+  doll.innerHTML = EQUIP_SLOTS.map(s=>{
+    const it = state.equipment[s.key];
+    return `<div class="doll-slot ${it?'filled r-'+it.rarity:''}" data-slot="${s.key}" title="${it? it.name+' — '+itemStatsStr(it) : s.name}">
+      <div class="slot-icon">${it?it.slotIcon:s.icon}</div><div>${it?it.name.split(' ').slice(-1)[0]:s.name}</div>
+    </div>`;
+  }).join('');
+  doll.querySelectorAll('.doll-slot').forEach(el=>el.addEventListener('click', ()=>{ if(state.equipment[el.dataset.slot]) unequipItem(el.dataset.slot); }));
+
+  const autoSellRow = document.getElementById('autoSellRow');
+  autoSellRow.innerHTML = RARITY.map(r=>`<label class="chk"><input type="checkbox" data-sell="${r.key}" ${state.autoSell[r.key]?'checked':''}> <span class="r-${r.key}">${r.name}</span></label>`).join('');
+  autoSellRow.querySelectorAll('input').forEach(cb=>cb.addEventListener('change', ()=>{ state.autoSell[cb.dataset.sell]=cb.checked; if(cb.checked){ state.autoScrap[cb.dataset.sell]=false; renderInventoryPanel(); } }));
+  const autoScrapRow = document.getElementById('autoScrapRow');
+  autoScrapRow.innerHTML = RARITY.map(r=>`<label class="chk"><input type="checkbox" data-scrap="${r.key}" ${state.autoScrap[r.key]?'checked':''}> <span class="r-${r.key}">${r.name}</span></label>`).join('');
+  autoScrapRow.querySelectorAll('input').forEach(cb=>cb.addEventListener('change', ()=>{ state.autoScrap[cb.dataset.scrap]=cb.checked; if(cb.checked){ state.autoSell[cb.dataset.scrap]=false; renderInventoryPanel(); } }));
+
+  const list = document.getElementById('itemList');
+  if(state.inventory.length===0){
+    list.innerHTML = `<div style="color:var(--muted);">No items yet — go adventuring.</div>`;
+  } else {
+    list.innerHTML = state.inventory.map(it=>`
+      <div class="item-row">
+        <div class="slot-icon">${it.slotIcon}</div>
+        <div class="item-info">
+          <div class="item-name r-${it.rarity}">${it.name} <span style="color:var(--muted);font-size:13px;">Lv.${it.level||1}</span></div>
+          <div class="item-sub">${itemStatsStr(it)} · worth ${it.value}g</div>
+        </div>
+        <div class="item-actions">
+          <button data-eq="${it.id}">Equip</button>
+          <button data-scrap="${it.id}">Scrap</button>
+          <button data-sell="${it.id}">Sell</button>
+        </div>
+      </div>`).join('');
+    list.querySelectorAll('[data-eq]').forEach(b=>b.addEventListener('click', ()=>equipItem(b.dataset.eq)));
+    list.querySelectorAll('[data-scrap]').forEach(b=>b.addEventListener('click', ()=>scrapItem(b.dataset.scrap)));
+    list.querySelectorAll('[data-sell]').forEach(b=>b.addEventListener('click', ()=>sellItem(b.dataset.sell)));
+  }
+}
+
+/* =========================================================
+   FORGE PANEL
+   ========================================================= */
+function dustCost(statKey){
+  const n = (state.dustPurchases && state.dustPurchases[statKey]) || 0;
+  return 1 + n; // each purchase of this stat costs 1 more dust than the last
+}
+function useDust(statKey){
+  const cost = dustCost(statKey);
+  if(state.scrapDust < cost) return;
+  state.scrapDust -= cost;
+  const eff = state.permStatBonus || (state.permStatBonus={});
+  eff[statKey] = (eff[statKey]||0)+ (isPercentStat(statKey)?0.5:1);
+  if(!state.dustPurchases) state.dustPurchases = {};
+  state.dustPurchases[statKey] = (state.dustPurchases[statKey]||0)+1;
+  log(`Used ${cost} Scrap Dust to permanently gain +${isPercentStat(statKey)?'0.5%':'1'} ${STAT_LABEL[statKey]}.`, 'log-info');
+  renderForgePanel();
+}
+function findAnyItem(itemId){
+  const eq = Object.values(state.equipment).find(i=>i && i.id===itemId);
+  if(eq) return eq;
+  return state.inventory.find(i=>i.id===itemId);
+}
+function enchantItem(itemId, elementKey){
+  const count = state.essences[elementKey]||0;
+  if(count<=0) return;
+  const it = findAnyItem(itemId);
+  if(!it) return;
+  state.essences[elementKey] = count-1;
+  it.resistElement = elementKey;
+  it.resistAmt = (it.resistAmt||0) + 6;
+  const bonusStat = randAnyStat();
+  it.stats[bonusStat] = (it.stats[bonusStat]||0) + (isPercentStat(bonusStat)?1:2);
+  log(`Enchanted ${it.name} with ${EL[elementKey].name} essence: +6 resist, +${isPercentStat(bonusStat)?1:2}${isPercentStat(bonusStat)?'%':''} ${STAT_LABEL[bonusStat]}.`, 'log-loot');
+  renderForgePanel(); renderInventoryPanel(); renderHUD();
+}
+function renderForgePanel(){
+  const p = document.getElementById('panel-forge');
+  const equippedList = EQUIP_SLOTS.filter(s=>state.equipment[s.key]).map(s=>state.equipment[s.key]);
+  const enchantable = [...equippedList, ...state.inventory.filter(i=>!i.isEssence)];
+  p.innerHTML = `
+    <h2 class="section-title">Forge</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="sub-title" style="margin-top:0;">Enchant with Boss Essence</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">Boss essences add elemental resistance and a stat bonus to an item.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+          ${ELEMENTS.map(e=>`<span class="hud-chip">${e.icon} ${e.name}: <b>${state.essences[e.key]||0}</b></span>`).join('')}
+        </div>
+        <select id="enchantItemSel"></select>
+        <select id="enchantElemSel" style="margin-left:6px;"></select>
+        <button id="enchantBtn" class="primary" style="margin-left:6px;">Enchant</button>
+      </div>
+      <div class="card">
+        <div class="sub-title" style="margin-top:0;">Scrap Dust</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">Spend Scrap Dust (from scrapping items) for small permanent stat boosts. Each stat gets pricier to raise the more you've already invested in it.</div>
+        <div style="margin-bottom:8px;">Dust available: <b style="color:var(--gold)">${state.scrapDust}</b></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${STAT_KEYS.map(k=>`<button data-dust="${k}" ${state.scrapDust<dustCost(k)?'disabled':''}>+${isPercentStat(k)?'0.5%':'1'} ${STAT_LABEL[k]} (${dustCost(k)} dust)</button>`).join('')}
+        </div>
+        ${Object.keys(state.permStatBonus||{}).length ? `<div class="sub-title">Permanent bonuses</div>${Object.entries(state.permStatBonus).filter(([k,v])=>v).map(([k,v])=>`<div class="stat-row"><span>${STAT_LABEL[k]}</span><b>+${round2(v)}${isPercentStat(k)?'%':''}</b></div>`).join('')}` : ''}
+      </div>
+    </div>
+  `;
+  const isel = document.getElementById('enchantItemSel');
+  isel.innerHTML = enchantable.length ? enchantable.map(it=>`<option value="${it.id}">${it.name} (${it.rarity})</option>`).join('') : `<option>No items</option>`;
+  const esel = document.getElementById('enchantElemSel');
+  esel.innerHTML = ELEMENTS.map(e=>`<option value="${e.key}" ${!(state.essences[e.key]>0)?'disabled':''}>${e.icon} ${e.name} (${state.essences[e.key]||0})</option>`).join('');
+  document.getElementById('enchantBtn').addEventListener('click', ()=>{ if(!enchantable.length) return; enchantItem(isel.value, esel.value); });
+  p.querySelectorAll('[data-dust]').forEach(b=>b.addEventListener('click', ()=>useDust(b.dataset.dust)));
+}
+
+/* =========================================================
+   FACTIONS (contribution to 20; max reward = chest armor + title)
+   ========================================================= */
+function joinFaction(id){
+  if(state.faction === id) return;
+  if(state.faction){
+    const cur = state.factionContribution[state.faction]||0;
+    state.factionContribution[state.faction] = Math.max(0, cur-2);
+  }
+  state.faction = id;
+  if(!(id in state.factionContribution)) state.factionContribution[id]=0;
+  log(`You now represent the ${FACTIONS.find(f=>f.id===id).name}.`, 'log-info');
+  renderFactionsPanel(); renderHUD();
+}
+function grantFactionMaxReward(f){
+  if(state.factionMaxRewarded[f.id]) return;
+  state.factionMaxRewarded[f.id] = true;
+  const armor = generateItem(state.level, RARITY[4]); // legendary
+  armor.slot = f.reward.slot; armor.slotIcon = f.reward.icon; armor.name = `${f.name} ${f.reward.label}`;
+  armor.isShield = (f.reward.slot==='offhand');
+  if(!overCapacity()){ state.inventory.push(armor); }
+  log(`👑 Max contribution reached with the ${f.name}! Received ${armor.name}.`, 'log-crit');
+  grantTitle(`faction_max_${f.id}`, `${f.name} Grandmaster`, f.statKey, 6);
+}
+function factionContributeCost(rank){ return Math.round(25 * Math.pow(1.15, rank)); }
+function contributeFaction(id){
+  const f = FACTIONS.find(x=>x.id===id);
+  const rank = state.factionContribution[id]||0;
+  const cost = factionContributeCost(rank);
+  if(state.gold < cost || rank >= f.maxRank) return;
+  state.gold -= cost;
+  state.factionContribution[id] = Math.min(f.maxRank, rank + 1);
+  if(state.factionContribution[id] >= f.maxRank) grantFactionMaxReward(f);
+  renderFactionsPanel(); renderHUD();
+}
+function factionTitle(f, rank){ return rank<=0 ? `Outsider of the ${f.name}` : `${RANK_TITLES_20[Math.min(19,rank-1)]} of the ${f.name}`; }
+function renderFactionsPanel(){
+  const p = document.getElementById('panel-factions');
+  p.innerHTML = `<h2 class="section-title">Factions</h2>
+  <div class="banner info">Represent one faction at a time for its stat bonus. Reach max contribution (20) for a unique legendary armor piece and title — every faction rewards a different piece of gear.</div>
+  <div class="grid grid-3">
+    ${FACTIONS.map(f=>{
+      const rank = state.factionContribution[f.id]||0;
+      const isCurrent = state.faction===f.id;
+      return `<div class="card" style="${isCurrent?'border-color:var(--gold);':''}">
+        <div style="font-size:22px;">${f.icon}</div>
+        <div class="sub-title" style="margin:6px 0;">${f.name}</div>
+        <div style="font-size:14px;color:var(--muted);">${f.desc}</div>
+        <div class="stat-row"><span>Bonus</span><b>+${f.perRank} ${STAT_LABEL[f.statKey]} / rank</b></div>
+        <div class="stat-row"><span>Max reward</span><b>${f.reward.icon} ${f.reward.label}</b></div>
+        <div class="stat-row"><span>Contribution</span><b>${rank}/${f.maxRank}</b></div>
+        <div class="progress-outer"><div class="progress-inner" style="width:${rank/f.maxRank*100}%"></div></div>
+        <div style="font-size:13px;color:var(--gold);margin:6px 0;">${factionTitle(f,rank)}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button data-join="${f.id}" ${isCurrent?'disabled':''}>${isCurrent?'Current':'Represent'}</button>
+          <button data-contrib="${f.id}" ${(!isCurrent||state.gold<factionContributeCost(rank)||rank>=f.maxRank)?'disabled':''}>Contribute (${rank>=f.maxRank?'MAX':factionContributeCost(rank)+'g'})</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  p.querySelectorAll('[data-join]').forEach(b=>b.addEventListener('click', ()=>joinFaction(b.dataset.join)));
+  p.querySelectorAll('[data-contrib]').forEach(b=>b.addEventListener('click', ()=>contributeFaction(b.dataset.contrib)));
+}
+
+/* =========================================================
+   DEITIES (favor to 20; max reward = weapon + title)
+   ========================================================= */
+function worshipDeity(id){
+  if(state.deity === id) return;
+  if(state.deity){ const cur = state.deityFavor[state.deity]||0; state.deityFavor[state.deity] = Math.max(0, cur-2); }
+  state.deity = id;
+  if(!(id in state.deityFavor)) state.deityFavor[id]=0;
+  log(`You now worship ${DEITIES.find(d=>d.id===id).name}.`, 'log-info');
+  renderDeitiesPanel(); renderHUD();
+}
+function grantDeityMaxReward(d){
+  if(state.deityMaxRewarded[d.id]) return;
+  state.deityMaxRewarded[d.id] = true;
+  const weapon = generateItem(state.level, RARITY[4]);
+  weapon.slot='mainhand'; weapon.slotIcon=d.reward.icon; weapon.name = d.reward.label;
+  weapon.isShield = false;
+  if(!overCapacity()){ state.inventory.push(weapon); }
+  log(`🌟 Max favor reached with ${d.name}! Received ${weapon.name}.`, 'log-crit');
+  grantTitle(`deity_max_${d.id}`, `Chosen of ${d.name.split(',')[0]}`, d.statKey, 6);
+}
+function deityPrayCost(rank){ return Math.round(20 * Math.pow(1.15, rank)); }
+function prayToDeity(id){
+  const d = DEITIES.find(x=>x.id===id);
+  const rank = state.deityFavor[id]||0;
+  const cost = deityPrayCost(rank);
+  if(state.gold < cost || rank >= d.maxFavor) return;
+  state.gold -= cost;
+  state.deityFavor[id] = Math.min(d.maxFavor, rank + 1);
+  state.mood = Math.min(100, state.mood+2);
+  if(state.deityFavor[id] >= d.maxFavor) grantDeityMaxReward(d);
+  renderDeitiesPanel(); renderHUD();
+}
+function renderDeitiesPanel(){
+  const p = document.getElementById('panel-deities');
+  p.innerHTML = `<h2 class="section-title">Pantheon</h2>
+  <div class="banner info">Worship one deity at a time for its stat bonus. Reach max favor (20) for a unique legendary weapon and title — every deity rewards a different weapon.</div>
+  <div class="grid grid-3">
+    ${DEITIES.map(d=>{
+      const rank = state.deityFavor[d.id]||0;
+      const isCurrent = state.deity===d.id;
+      return `<div class="card" style="${isCurrent?'border-color:var(--gold);':''}">
+        <div style="font-size:22px;">${d.icon}</div>
+        <div class="sub-title" style="margin:6px 0;">${d.name}</div>
+        <div style="font-size:14px;color:var(--muted);">${d.desc}</div>
+        <div class="stat-row"><span>Bonus</span><b>+${d.perFavor} ${STAT_LABEL[d.statKey]} / favor</b></div>
+        <div class="stat-row"><span>Max reward</span><b>${d.reward.icon} ${d.reward.label}</b></div>
+        <div class="stat-row"><span>Favor</span><b>${rank}/${d.maxFavor}</b></div>
+        <div class="progress-outer"><div class="progress-inner" style="width:${rank/d.maxFavor*100}%"></div></div>
+        <div style="font-size:13px;color:var(--gold);margin:6px 0;">${rank<=0?'Unknown to':RANK_TITLES_20[Math.min(19,rank-1)]+' of'} ${d.name.split(',')[0]}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button data-worship="${d.id}" ${isCurrent?'disabled':''}>${isCurrent?'Current':'Worship'}</button>
+          <button data-pray="${d.id}" ${(!isCurrent||state.gold<deityPrayCost(rank)||rank>=d.maxFavor)?'disabled':''}>Pray (${rank>=d.maxFavor?'MAX':deityPrayCost(rank)+'g'})</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  p.querySelectorAll('[data-worship]').forEach(b=>b.addEventListener('click', ()=>worshipDeity(b.dataset.worship)));
+  p.querySelectorAll('[data-pray]').forEach(b=>b.addEventListener('click', ()=>prayToDeity(b.dataset.pray)));
+}
+
+/* =========================================================
+   CULTURES (reputation to 20; max reward = title)
+   ========================================================= */
+function grantCultureMaxReward(c){
+  if(state.cultureMaxRewarded[c.id]) return;
+  state.cultureMaxRewarded[c.id] = true;
+  grantTitle(`culture_max_${c.id}`, `Voice of the ${c.name}`, c.statKey, 5);
+}
+function turnInEssence(cultureId, elementKey){
+  const count = state.essences[elementKey]||0;
+  if(count<=0) return;
+  state.essences[elementKey] = count-1;
+  const c = CULTURES.find(x=>x.id===cultureId);
+  state.cultureRep[cultureId] = Math.min(c.maxRep, (state.cultureRep[cultureId]||0)+1);
+  log(`Turned in ${EL[elementKey].name} essence to the ${c.name} for reputation.`, 'log-loot');
+  if(state.cultureRep[cultureId] >= c.maxRep) grantCultureMaxReward(c);
+  renderCulturesPanel(); renderHUD();
+}
+function renderCulturesPanel(){
+  const p = document.getElementById('panel-cultures');
+  p.innerHTML = `<h2 class="section-title">Cultures</h2>
+  <div class="banner info">Turn in matching Boss Essences at a culture's hall to raise reputation (up to 20). All cultures build reputation independently. Max reputation grants a unique title.</div>
+  <div class="grid grid-3">
+    ${CULTURES.map(c=>{
+      const rank = state.cultureRep[c.id]||0;
+      const essCount = state.essences[c.element]||0;
+      return `<div class="card">
+        <div style="font-size:22px;">${c.icon}</div>
+        <div class="sub-title" style="margin:6px 0;">${c.name}</div>
+        <div style="font-size:14px;color:var(--muted);">${c.desc}</div>
+        <div class="stat-row"><span>Bonus</span><b>+${c.perRep} ${STAT_LABEL[c.statKey]} / rep</b></div>
+        <div class="stat-row"><span>Resist</span><b>+3 ${EL[c.element].name} / rep</b></div>
+        <div class="stat-row"><span>Reputation</span><b>${rank}/${c.maxRep}</b></div>
+        <div class="progress-outer"><div class="progress-inner" style="width:${rank/c.maxRep*100}%"></div></div>
+        <div style="font-size:13px;color:var(--gold);margin:6px 0;">${rank<=0?'Outsider of':RANK_TITLES_20[Math.min(19,rank-1)]+' of'} the ${c.name}</div>
+        <button data-turnin="${c.id}" data-elem="${c.element}" ${essCount<=0?'disabled':''}>Turn in essence (${essCount})</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+  p.querySelectorAll('[data-turnin]').forEach(b=>b.addEventListener('click', ()=>turnInEssence(b.dataset.turnin,b.dataset.elem)));
+}
+
+
+/* =========================================================
+   COMPANIONS PANEL
+   ========================================================= */
+function companionLevel(compId){
+  const comp = companionById(compId);
+  return Math.max(1, Math.floor((state.regionKills[comp.regionId]||0)/20));
+}
+function setActiveCompanion(id){
+  state.activeCompanionId = id;
+  log(`${companionById(id).name} is now traveling with you.`, 'log-info');
+  renderCompanionsPanel();
+}
+function renderCompanionsPanel(){
+  const p = document.getElementById('panel-companions');
+  p.innerHTML = `<h2 class="section-title">Companions</h2>
+  <div class="banner info">Each companion awakens after 100 monster kills in its home region. Only one companion may travel with you at a time; it occasionally lands bonus hits and finds extra loot.</div>
+  <div class="grid grid-3" id="companionCards"></div>
+  <div id="companionSkillsWrap"></div>`;
+  const wrap = document.getElementById('companionCards');
+  wrap.innerHTML = COMPANIONS.map(c=>{
+    const unlocked = state.unlockedCompanions.includes(c.id);
+    const kills = state.regionKills[c.regionId]||0;
+    const isActive = state.activeCompanionId===c.id;
+    return `<div class="card" style="${isActive?'border-color:var(--gold);':''}${unlocked?'':'opacity:.6;'}">
+      <div style="font-size:22px;">${c.icon}</div>
+      <div class="sub-title" style="margin:6px 0;">${c.name}</div>
+      <div style="font-size:14px;color:var(--muted);">${c.desc}</div>
+      ${unlocked ? `
+        <div class="stat-row"><span>Level</span><b>${companionLevel(c.id)}</b></div>
+        <button data-active="${c.id}" ${isActive?'disabled':''}>${isActive?'Active':'Bring along'}</button>
+      ` : `
+        <div class="stat-row"><span>Kills in ${REGION_NAMES[ELEMENTS.findIndex(e=>e.key===c.element)]}</span><b>${kills}/${c.unlockKills}</b></div>
+        <div class="progress-outer"><div class="progress-inner" style="width:${Math.min(100,kills/c.unlockKills*100)}%"></div></div>
+      `}
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('[data-active]').forEach(b=>b.addEventListener('click', ()=>setActiveCompanion(b.dataset.active)));
+
+  const skillsWrap = document.getElementById('companionSkillsWrap');
+  const unlockedComps = COMPANIONS.filter(c=>state.unlockedCompanions.includes(c.id));
+  if(unlockedComps.length===0){
+    skillsWrap.innerHTML = `<div style="color:var(--muted);margin-top:10px;">No companions unlocked yet — keep adventuring.</div>`;
+  } else {
+    skillsWrap.innerHTML = unlockedComps.map(c=>`
+      <div class="sub-title">${c.icon} ${c.name} Support Skills</div>
+      <div class="grid grid-3" id="compTree_${c.id}"></div>
+    `).join('');
+    unlockedComps.forEach(c=>renderSkillTree(document.getElementById('compTree_'+c.id), c));
+  }
+}
+
+/* =========================================================
+   TOWN PANEL
+   ========================================================= */
+const FOOD_ITEMS = [
+  {name:'Bread & Cheese', cost:8, hunger:30, mood:2},
+  {name:'Roast Meat', cost:20, hunger:55, mood:4},
+  {name:'Feast Platter', cost:55, hunger:100, mood:10},
+];
+const DRINK_ITEMS = [
+  {name:'Water Skin', cost:5, thirst:30, mood:1},
+  {name:'Spiced Cider', cost:15, thirst:55, mood:4},
+  {name:'Elixir Draught', cost:40, thirst:100, mood:8},
+];
+const MOUNT_COST = 4500;
+
+function restAtInn(){
+  const cost = 10;
+  if(state.gold < cost) { log('Not enough gold to rest at the inn.', 'log-dmg'); return; }
+  state.gold -= cost;
+  state.stamina = 100;
+  state.fatigue = Math.max(0, state.fatigue-40);
+  state.mood = Math.min(100, state.mood+10); // resting at the inn increases mood
+  state.hp = maxHP(); state.mp = maxMP();
+  log('You rest at the inn and recover fully.', 'log-lvl');
+  renderTownPanel(); renderHUD();
+}
+function buyMount(){
+  if(state.gold < MOUNT_COST || state.hasMount) return;
+  state.gold -= MOUNT_COST;
+  state.hasMount = true;
+  log('You purchase a mount! Travel speed increased.', 'log-lvl');
+  renderTownPanel(); renderHUD();
+}
+function buyFood(idx){
+  const f = FOOD_ITEMS[idx];
+  if(state.gold < f.cost) return;
+  state.gold -= f.cost;
+  state.hunger = Math.min(100, state.hunger+f.hunger);
+  state.mood = Math.min(100, state.mood+f.mood);
+  log(`You eat ${f.name}.`, 'log-info');
+  renderTownPanel(); renderHUD();
+}
+function buyDrink(idx){
+  const d = DRINK_ITEMS[idx];
+  if(state.gold < d.cost) return;
+  state.gold -= d.cost;
+  state.thirst = Math.min(100, state.thirst+d.thirst);
+  state.mood = Math.min(100, state.mood+d.mood);
+  log(`You drink ${d.name}.`, 'log-info');
+  renderTownPanel(); renderHUD();
+}
+function renderTownPanel(){
+  const p = document.getElementById('panel-town');
+  p.innerHTML = `<h2 class="section-title">Town</h2>
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="sub-title" style="margin-top:0;">🛏️ Inn</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">Rest to fully restore stamina, HP, MP and ease fatigue. Resting boosts your mood.</div>
+      <button class="primary" id="restBtn">Rest (10g)</button>
+    </div>
+    <div class="card">
+      <div class="sub-title" style="margin-top:0;">🐴 Stable</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">${state.hasMount? 'You already own a mount.' : `Classes and races without a starting mount must buy one to boost travel speed.`}</div>
+      <button id="mountBtn" ${state.hasMount||state.gold<MOUNT_COST?'disabled':''}>${state.hasMount?'Owned':'Buy Mount ('+MOUNT_COST+'g)'}</button>
+    </div>
+    <div class="card">
+      <div class="sub-title" style="margin-top:0;">🎒 Bags</div>
+      <div style="font-size:14px;color:var(--muted);">Rare consumables found in the wild permanently raise carry capacity by 1. You've found <b style="color:var(--gold)">${state.bags}</b> so far.</div>
+    </div>
+  </div>
+  <div class="sub-title">🍞 Food Stall</div>
+  <div class="grid grid-3">
+    ${FOOD_ITEMS.map((f,i)=>`<div class="card"><div class="stat-row"><span>${f.name}</span><b>${f.cost}g</b></div><div style="font-size:13px;color:var(--muted);">+${f.hunger} hunger, +${f.mood} mood</div><button data-food="${i}" ${state.gold<f.cost?'disabled':''}>Buy & Eat</button></div>`).join('')}
+  </div>
+  <div class="sub-title">🍺 Tavern</div>
+  <div class="card">
+    <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">Step away from the road to rest and play a hand of blackjack. Auto-battle pauses while you're here.</div>
+    <button id="enterTavernBtn">🍺 Enter the Tavern</button>
+  </div>
+  <div class="sub-title">🥤 Drink Stall</div>
+  <div class="grid grid-3">
+    ${DRINK_ITEMS.map((d,i)=>`<div class="card"><div class="stat-row"><span>${d.name}</span><b>${d.cost}g</b></div><div style="font-size:13px;color:var(--muted);">+${d.thirst} thirst, +${d.mood} mood</div><button data-drink="${i}" ${state.gold<d.cost?'disabled':''}>Buy & Drink</button></div>`).join('')}
+  </div>
+  <div class="sub-title">⚠️ Danger Zone</div>
+  <div class="card" style="border-color:var(--hp);">
+    <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">Permanently erase this character and all saved progress — gold, gear, skills, companions, everything. This cannot be undone.</div>
+    <button class="danger" id="resetGameBtn">🗑️ Reset Game</button>
+  </div>`;
+  document.getElementById('restBtn').addEventListener('click', restAtInn);
+  document.getElementById('mountBtn').addEventListener('click', buyMount);
+  document.getElementById('enterTavernBtn').addEventListener('click', ()=>{ state.atTavern = true; state.monster=null; switchTab('adventure'); });
+  document.getElementById('resetGameBtn').addEventListener('click', resetGame);
+  p.querySelectorAll('[data-food]').forEach(b=>b.addEventListener('click', ()=>buyFood(+b.dataset.food)));
+  p.querySelectorAll('[data-drink]').forEach(b=>b.addEventListener('click', ()=>buyDrink(+b.dataset.drink)));
+}
+
+/* =========================================================
+   COW DIMENSION — minigame gate, final boss, reincarnation
+   ========================================================= */
+let moo = null; // transient minigame state
+function startMooGame(){
+  moo = { round:1, successes:0, pos:0, dir:1, zoneStart: 30+Math.random()*20, zoneWidth: 18, timerId:null, resultMsg:'', active:true };
+  renderCowPanel();
+  moo.timerId = setInterval(mooTick, 35);
+}
+function mooTick(){
+  if(!moo || !moo.active) return;
+  moo.pos += moo.dir * (2.2 + moo.round*0.25);
+  if(moo.pos>=100){ moo.pos=100; moo.dir=-1; }
+  if(moo.pos<=0){ moo.pos=0; moo.dir=1; }
+  const cursor = document.getElementById('mooCursor');
+  if(cursor) cursor.style.left = moo.pos+'%';
+  else { clearInterval(moo.timerId); }
+}
+function mooStop(){
+  if(!moo || !moo.active) return;
+  const inZone = moo.pos >= moo.zoneStart && moo.pos <= moo.zoneStart+moo.zoneWidth;
+  if(inZone) moo.successes++;
+  moo.round++;
+  if(moo.round > 5){
+    moo.active = false;
+    clearInterval(moo.timerId);
+    if(moo.successes >= 3){
+      state.cowMinigamePassed = true;
+      moo.resultMsg = `Success! ${moo.successes}/5 — the way to the Cow is open.`;
+      log('🐄 You pass the herding trial. The Cow awaits.', 'log-lvl');
+    } else {
+      moo.resultMsg = `Not quite — ${moo.successes}/5. The herd scatters. Try again.`;
+    }
+    renderCowPanel();
+    return;
+  }
+  moo.zoneStart = 20+Math.random()*40;
+  moo.zoneWidth = Math.max(10, 18-moo.round);
+  renderCowPanel();
+  moo.timerId = setInterval(mooTick, 35);
+}
+
+function challengeCow(){
+  const lvl = Math.max(30, state.level*2);
+  state.monster = { name:'The Cow', element:'nature', level:lvl, hp: 5000+state.level*400, maxHp: 5000+state.level*400,
+    atk: Math.round(8+lvl*1.4), isBoss:true, isCow:true, essenceDropChance:0, rarityFloor:3 };
+  state.encounterTimer = 0;
+  state.autocastTimer = autocastSeconds();
+  log('🐄 The Cow stares at you, unimpressed. The final battle begins.', 'log-boss');
+  switchTab('adventure');
+}
+
+function reincarnate(){
+  const st = effectiveStats();
+  const bonus = {};
+  STAT_KEYS.forEach(k=>{ bonus[k] = Math.max(1, Math.round(st[k]*0.01)); });
+  pendingReincarnate = { bonus, count: (state.reincarnations||0)+1 };
+  document.getElementById('app').classList.remove('ready');
+  document.getElementById('charCreate').style.display = 'block';
+  selRace = null; selClass = null;
+  renderCharCreate();
+}
+
+function renderCowPanel(){
+  const p = document.getElementById('panel-cow');
+  if(!allRegionsCompleted()){
+    p.innerHTML = `<h2 class="section-title">Cow Dimension</h2>
+      <div class="banner warn">This rift only opens once all 12 regions have been conquered (all 3 bosses defeated in each). Progress: ${completedRegionsCount()}/12 regions completed.</div>`;
+    return;
+  }
+  if(state.cowFinalBossDefeated){
+    p.innerHTML = `<h2 class="section-title">Cow Dimension</h2>
+      <div class="banner gold">The Cow has fallen. Its power is spent... but the world can begin again.</div>
+      <div class="card">
+        <div class="sub-title" style="margin-top:0;">Reincarnate</div>
+        <div style="font-size:15px;color:var(--muted);margin-bottom:10px;">Starting over resets your level, gear, and progress — but grants your new character a permanent echo (1% of your final stats) that carries forward forever.</div>
+        <button class="primary" id="reincBtn">✨ Reincarnate</button>
+      </div>`;
+    document.getElementById('reincBtn').addEventListener('click', reincarnate);
+    return;
+  }
+  if(!state.cowMinigamePassed){
+    p.innerHTML = `<h2 class="section-title">Cow Dimension</h2>
+      <div class="banner info">All regions conquered! Before you may challenge the final boss, prove yourself in the herding trial: stop the marker inside the green zone at least 3 of 5 times.</div>
+      <div class="card" id="mooCard">
+        ${moo && moo.active ? `
+          <div>Round ${moo.round}/5 · Successes: ${moo.successes}</div>
+          <div class="moo-track"><div class="moo-zone" style="left:${moo.zoneStart}%;width:${moo.zoneWidth}%;"></div><div class="moo-cursor" id="mooCursor" style="left:${moo.pos}%;"></div></div>
+          <button class="primary" id="mooStopBtn">🛑 Stop!</button>
+        ` : `
+          ${moo && moo.resultMsg ? `<div class="banner ${state.cowMinigamePassed?'gold':'warn'}">${moo.resultMsg}</div>` : ''}
+          <button class="primary" id="mooStartBtn">Begin Herding Trial</button>
+        `}
+      </div>`;
+    const startBtn = document.getElementById('mooStartBtn'); if(startBtn) startBtn.addEventListener('click', startMooGame);
+    const stopBtn = document.getElementById('mooStopBtn'); if(stopBtn) stopBtn.addEventListener('click', mooStop);
+    return;
+  }
+  p.innerHTML = `<h2 class="section-title">Cow Dimension</h2>
+    <div class="banner gold">The trial is passed. Somewhere in the white void ahead, The Cow is waiting.</div>
+    <div class="card">
+      <div class="sub-title" style="margin-top:0;">🐄 The Cow</div>
+      <div style="font-size:15px;color:var(--muted);margin-bottom:10px;">An entirely ordinary-looking cow with statistics that should not be possible. Idle combat rules apply as normal — it will simply take a while.</div>
+      <button class="primary" id="challengeBtn" ${state.monster && state.monster.isCow ? 'disabled':''}>${state.monster && state.monster.isCow ? 'Battle in progress — see Adventure tab' : 'Challenge the Cow'}</button>
+    </div>`;
+  const cb = document.getElementById('challengeBtn'); if(cb) cb.addEventListener('click', challengeCow);
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+(async function boot(){
+  const hasSave = await loadGame();
+  if(hasSave && state){
+    ensureSkillLevels();
+    if(!state.regionProgress) state.regionProgress = {};
+    REGIONS.forEach(r=>{ if(!state.regionProgress[r.id]) state.regionProgress[r.id] = {bossesKilled:[false,false,false], completed:false}; });
+    document.getElementById('charCreate').style.display = 'none';
+    startApp();
+    log('Welcome back! Your progress was restored.', 'log-info');
+  } else {
+    renderCharCreate();
+  }
+})();
+
+})(); // end IIFE
+</script>
+</body>
+</html>
